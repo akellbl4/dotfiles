@@ -1,7 +1,7 @@
 export LANG=en_US.UTF-8
 export TERM=xterm-256color
 export PATH=$HOME/.dotfiles/bin/:$PATH
-export EDITOR="code"
+export EDITOR="vim"
 
 # Highlight section titles in manual pages
 export LESS_TERMCAP_md="$COLOR_YELLOW"
