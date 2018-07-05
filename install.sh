@@ -2,19 +2,19 @@
 
 source includes/colors.sh
 
-dir=$(cd $(dirname ${BASH_SOURCE[0]}) && pwd); dir=$(dirname $dir)
+dir="$HOME/.dotfiles"
 
-if [[ -d $HOME/.dotfiles ]]; then
+if [[ -d $dir ]]; then
 	echo "Update starts..."
-	cd $HOME/.dotfiles
+	cd $dir
 	git pull origin master
 	echo "${COLOR_GREEN}Pulling success${COLOR_RESET}"
 else
 	echo "Install starts..."
-	git clone https://github.com/akellbl4/dotfiles.git $HOME/.dotfiles
+	git clone https://github.com/akellbl4/dotfiles.git $dir
 	echo "${COLOR_GREEN}Pulling success${COLOR_RESET}"
 	echo "Adding source file..."
-	grep -q "\.dotfiles/.bashrc" $HOME/.bashrc || echo "source ~/.dotfiles/.bashrc" >> $HOME/.bashrc
+	grep -q "\.dotfiles/\.bashrc" $HOME/.bashrc || echo "source ~/.dotfiles/.bashrc" >> $HOME/.bashrc
 fi
 
 if [[ "$1" == "--macos" ]]; then
