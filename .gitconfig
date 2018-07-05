@@ -1,0 +1,131 @@
+[color]
+	ui = auto
+
+[color "grep"]
+	selected = 8
+	filename = normal
+	linenumber = 8
+	separator = 8
+
+[color "diff"]
+	new=green
+	old=red
+	newMoved=green bold
+	oldMoved=red bold
+	newMoved=green dim
+	oldMoved=red dim
+	newMovedAlternative=green dim
+	oldMovedAlternative=red dim
+
+[user]
+	name = Pavel Mineev
+	email = pavel@mineev.me
+
+[core]
+	excludesfile = ~/.gitignore
+	pager = less -x4 -r
+
+[diff]
+	algorithm = patience
+	colorMoved=default
+
+[apply]
+	whitespace = nowarn
+
+[alias]
+	# http://durdn.com/blog/2012/11/22/must-have-git-aliases-advanced-examples/
+
+	### Explore your history, the commits and the code
+
+	# List commits in short form, with colors and branch/tag annotations
+	ls = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate
+
+	# List commits showing changed files is invoked with git ll and looks like this:
+	ll = log --pretty=format:"%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --numstat
+
+	# List with no colors if you need to chain the out put with Unix pipes:
+	lnc = log --pretty=format:"%h\\ %s\\ [%cn]"
+
+	# List oneline commits showing dates:
+	# lds = log --pretty=format:"%C(yellow)%h\\ %ad%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --date=short
+
+	# List oneline commits showing relative dates:
+	# ld = log --pretty=format:"%C(yellow)%h\\ %ad%Cred%d\\ %Creset%s%Cblue\\ [%cn]" --decorate --date=relative
+
+	# Short git log
+	le = log --oneline --decorate
+
+	# Graph
+	lg = log --graph --pretty="format:%C(yellow)%h%Cred%d\\ %Creset%s%Cblue\\ [%cn]"
+
+	### Log commands to inspect (recent) history
+
+	# Show a diff last commit:
+	dlc = diff --cached HEAD^
+
+	### Finding files and content inside files (grep)
+
+	# Find a file path in codebase:
+	ff = "!git ls-files | grep -i"
+
+	# Search/grep your entire codebase for a string:
+	grep = grep -Ii
+	gre = grep -Ii --line-number --heading --break
+
+	# Grep from root folder:
+	gra = "!git grep"
+
+	### Going meta: List all your Aliases (la)
+	la = "!git config -l | grep alias | cut -c 7-"
+
+	### Tag aliases
+
+	# Show the last tag:
+	lt = describe --tags --abbrev=0
+
+	### Basic Shortcuts
+
+	cp = cherry-pick
+	st = status -s
+	cl = clone
+	a = add
+	ai = add --interactive
+	ci = commit
+	cma = commit -am
+	ca = commit --amend
+	c = checkout
+	co =  checkout -b
+	b = branch
+	diff = diff --word-diff
+	dc = diff --cached
+
+	### Stash operations
+
+	sl = stash list
+	sa = stash apply
+	ss = stash save
+
+	### File level ignoring
+
+	assume   = update-index --assume-unchanged
+	unassume = update-index --no-assume-unchanged
+	assumed  = "!git ls-files -v | grep ^h | cut -c 3-"
+
+	### Snapshots
+
+	snapshot = !git stash save "snapshot: $(date)" && git stash apply "stash@{0}"
+
+	### Miscellaneous
+
+	open = "!code \"cd $GIT_PREFIX\" -p $(git diff --name-only HEAD | tr '\\n' ' ')"
+	edit = "!f() { code \"cd $GIT_PREFIX\" -p $(git diff --name-only "$1"^.."$1" | tr '\\n' ' '); }; f"
+	age = "!git for-each-ref --sort=committerdate --format='%(refname:short) * %(authorname) * %(committerdate:relative)' refs/remotes/ | column -t -s '*'"
+
+[push]
+	default = simple
+
+[url "https://"]
+	insteadof = git@
+
+[url "https://github.com/"]
+	insteadof = git@github.com:

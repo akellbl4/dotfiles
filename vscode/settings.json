@@ -1,0 +1,54 @@
+{
+	"workbench.statusBar.feedback.visible": false,
+	"workbench.colorTheme": "One Dark Pro",
+	"workbench.iconTheme": "vscode-icons",
+	"workbench.editor.swipeToNavigate": true,
+	"workbench.tips.enabled": false,
+	"workbench.fontAliasing": "antialiased",
+
+	"editor.fontFamily": "Fira Code",
+	"editor.fontSize": 14,
+	"editor.lineHeight": 22,
+	"editor.suggestFontSize": 14,
+	"editor.suggestLineHeight": 24,
+	"editor.fontLigatures": true,
+	"editor.renderWhitespace": "boundary",
+	"editor.insertSpaces": false,
+	"editor.multiCursorModifier": "ctrlCmd",
+	"editor.formatOnPaste": true,
+	"editor.minimap.renderCharacters": false,
+	"editor.rulers": [
+		100
+	],
+	"editor.smoothScrolling": true,
+	"editor.suggestSelection": "first",
+	"editor.tabCompletion": true,
+
+	"terminal.explorerKind": "external",
+	"terminal.external.osxExec": "iTerm.app",
+	"terminal.integrated.fontSize": 14,
+	"terminal.integrated.lineHeight": 1.2,
+
+	"files.associations": {
+		"*.css": "postcss"
+	},
+	"emmet.includeLanguages": {
+		"postcss": "css"
+	},
+	"emmet.syntaxProfiles": {
+		"postcss": "css"
+	},
+
+	"atomKeymap.promptV3Features": true,
+
+	"javascript.format.enable": false,
+	"javascript.validate.enable": false,
+	"typescript.format.enable": false,
+	"typescript.validate.enable": false,
+	
+	"eslint.alwaysShowStatus": true,
+	"eslint.autoFixOnSave": true,
+	"eslint.packageManager": "yarn",
+	"eslint.run": "onSave",
+	
+}
