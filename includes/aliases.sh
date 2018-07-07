@@ -49,4 +49,5 @@ alias flush="dscacheutil -flushcache && killall -HUP mDNSResponder"
 # Lock the screen (when going AFK)
 alias afk="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resources/CGSession -suspend"
 
-alias dot-update="./bin/"
+# Add colors to grep by alias because GREP_OPTIONS is depricated
+alias grep="grep --color=auto"

@@ -26,7 +26,6 @@ export PS2="$COLOR_RESET→ "
 
 
 # Colors grep
-export GREP_OPTIONS="--color=auto"
 export GREP_COLOR="1;37;45"
 
 LS_COLORS="HxgxcxdxFxegedabagacad"
