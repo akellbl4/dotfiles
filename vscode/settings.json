@@ -1,12 +1,12 @@
 {
 	"workbench.statusBar.feedback.visible": false,
-	"workbench.colorTheme": "One Dark Pro",
-	"workbench.iconTheme": "vscode-icons",
+	"workbench.colorTheme": "Material Theme",
+	"workbench.iconTheme": "eq-material-theme-icons",
 	"workbench.editor.swipeToNavigate": true,
 	"workbench.tips.enabled": false,
 	"workbench.fontAliasing": "antialiased",
 
-	"editor.fontFamily": "Fira Code",
+	"editor.fontFamily": "Fira Code iScript",
 	"editor.fontSize": 14,
 	"editor.lineHeight": 22,
 	"editor.suggestFontSize": 14,
@@ -45,10 +45,16 @@
 	"javascript.validate.enable": false,
 	"typescript.format.enable": false,
 	"typescript.validate.enable": false,
-	
+
 	"eslint.alwaysShowStatus": true,
 	"eslint.autoFixOnSave": true,
 	"eslint.packageManager": "yarn",
 	"eslint.run": "onSave",
-	
+	"githubPullRequests.hosts": [
+		{
+			"host": "https://github.com",
+			"username": "oauth",
+			"token": "system"
+		}
+	],
 }
