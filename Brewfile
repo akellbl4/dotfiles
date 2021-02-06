@@ -4,9 +4,12 @@ tap "homebrew/cask-fonts"
 tap "homebrew/cask-versions"
 tap "homebrew/core"
 
+cask_args appdir: "~/Applications", require_sha: true
+
 brew "mas"                                          # https://github.com/mas-cli/mas (Mac App Store CLI)
+brew "fish"                                         # Nice shell
 brew "tig"                                          # https://jonas.github.io/tig/ (Terminal UI for Git)
-brew "node"                                         # NodeJS
+brew "node"                                         # Node.js
 brew "ssh-copy-id"                                  # Pass your RSA keys on remote server
 
 cask "qlcolorcode"                                  # https://github.com/anthonygelibert/QLColorCode
@@ -17,22 +20,23 @@ cask "qlvideo"                                      # https://github.com/Margina
 cask "quicklook-json"                               # http://www.sagtau.com/quicklookjson.html
 cask "webpquicklook"                                # https://github.com/dchest/webp-quicklook
 
+cask "setapp"                                        # https://go.setapp.com/invite/6thxftx0 (Alt AppStore by subscribe)
 cask "little-snitch"                                 # https://www.obdev.at/products/littlesnitch/index.html
 cask "docker"                                        # https://www.dropbox.com
-cask "google-chrome"                       	         # https://www.tunnelblick.net
+cask "google-chrome"                       	         
+cask "firefox"
 cask "iterm2"                                        # https://www.iterm2.com
-cask "setapp"                                        # https://go.setapp.com/invite/6thxftx0 (Alt AppStore by subscribe)
 cask "tunnelblick"                                   # https://www.tunnelblick.net
 cask "visual-studio-code"                            # https://code.visualstudio.com
-cask "homebrew/cask-versions/google-chrome-canary"   # https://www.google.ru/chrome/browser/canary.html
-cask "homebrew/cask-versions/telegram-alpha"         # https://macos.telegram.org
 cask "alfred"                                        # https://www.alfredapp.com
-cask "disablemonitor"                                # https://github.com/Eun/DisableMonitor
+cask "spotify"
+cask "discord"
 
-cask "homebrew/cask-fonts/font-fira-code"            # https://github.com/tonsky/FiraCode Font with legatures for coding
+cask "homebrew/cask-drivers/shureplus-motiv"         # Shure Motiv for MV microphones
+cask "homebrew/cask-fonts/font-jetbrains-mono"       # Font for code
 
 mas "Enpass", id: 732710998                          # https://www.enpass.io
 mas "Magnet", id: 441258766                          # http://magnet.crowdcafe.com
-mas "Memo", id: 1212409035                           # http://memo-app.net (Good stiky memos on desktop like old MacOS widgets)
-mas "Spark", id: 1176895641                          # https://sparkmailapp.com
-mas "Wunderlist", id: 410628904                      # https://www.wunderlist.com
+mas "Telegram", id: 747648890
+mas "Canary Mail App ", id: 1236045954
+mas "Slack", id: 803453959
