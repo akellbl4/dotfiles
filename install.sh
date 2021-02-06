@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 dir="$HOME/.dotfiles"
 
 if [[ -d $dir ]]; then
@@ -12,7 +12,6 @@ else
 	echo "Pulling success"
 	echo "Adding source file..."
 	curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher
-	grep -q "\.dotfiles/\.bashrc" $HOME/.bashrc || echo "source ~/.dotfiles/.bashrc" >> $HOME/.bashrc
 
 	if [[ "$1" == "--macos" && "$2" == "--change-defaults" ]]; then
 		source macos_custom_settings.sh
