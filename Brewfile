@@ -31,6 +31,7 @@ cask "visual-studio-code"                            # https://code.visualstudio
 cask "alfred"                                        # https://www.alfredapp.com
 cask "spotify"
 cask "discord"
+cask "obs"
 
 cask "homebrew/cask-drivers/shureplus-motiv"         # Shure Motiv for MV microphones
 cask "homebrew/cask-fonts/font-jetbrains-mono"       # Font for code
