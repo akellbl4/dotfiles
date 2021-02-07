@@ -42,5 +42,4 @@ cask "homebrew/cask-fonts/font-jetbrains-mono"       # Font for code
 mas "Enpass", id: 732710998                          # https://www.enpass.io
 mas "Magnet", id: 441258766                          # http://magnet.crowdcafe.com
 mas "Telegram", id: 747648890
-mas "Canary Mail App ", id: 1236045954
 mas "Slack", id: 803453959
