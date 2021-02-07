@@ -4,7 +4,7 @@ tap "homebrew/cask-fonts"
 tap "homebrew/cask-versions"
 tap "homebrew/core"
 
-cask_args appdir: "~/Applications", require_sha: true
+cask_args appdir: "/Applications", require_sha: true
 
 brew "mas"                                          # https://github.com/mas-cli/mas (Mac App Store CLI)
 brew "fish"                                         # Nice shell
@@ -22,7 +22,6 @@ cask "webpquicklook"                                # https://github.com/dchest/
 
 cask "setapp"                                        # https://go.setapp.com/invite/6thxftx0 (Alt AppStore by subscribe)
 cask "little-snitch"                                 # https://www.obdev.at/products/littlesnitch/index.html
-cask "docker"                                        # https://www.dropbox.com
 cask "google-chrome"                       	         
 cask "firefox"
 cask "iterm2"                                        # https://www.iterm2.com
@@ -31,7 +30,11 @@ cask "visual-studio-code"                            # https://code.visualstudio
 cask "alfred"                                        # https://www.alfredapp.com
 cask "spotify"
 cask "discord"
+cask "figma"
 cask "obs"
+cask "epoccam"
+cask "docker"                                        # https://www.dropbox.com
+cask "docker-compose"
 
 cask "homebrew/cask-drivers/shureplus-motiv"         # Shure Motiv for MV microphones
 cask "homebrew/cask-fonts/font-jetbrains-mono"       # Font for code
