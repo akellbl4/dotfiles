@@ -40,6 +40,9 @@ declare -a files=(
 	.gitconfig
 )
 
+echo "Installing terminall aliases..."
+cp $dir/aliases.fish ~/.config/fish/functions
+
 echo "Linking dotfiles..."
 for i in ${files[@]}; do
 	# create symbolic link if not exists

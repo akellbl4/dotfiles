@@ -1,7 +1,3 @@
-# Easier navigation: .. and -
-alias ..="cd .."
-alias -- -="cd -"
-
 alias d="cd ~/Desktop"
 alias p="cd ~/Developer"
 alias dl="cd ~/Downloads"
