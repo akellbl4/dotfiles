@@ -11,6 +11,7 @@ brew "fish"                                         # Nice shell
 brew "tig"                                          # https://jonas.github.io/tig/ (Terminal UI for Git)
 brew "node"                                         # Node.js
 brew "ssh-copy-id"                                  # Pass your RSA keys on remote server
+brew "qmk-toolbox"                                  # Tools for flash QMK compatible keebs
 
 cask "qlcolorcode"                                  # https://github.com/anthonygelibert/QLColorCode
 cask "qlimagesize"                                  # https://github.com/Nyx0uf/qlImageSize
