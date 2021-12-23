@@ -18,8 +18,8 @@
 	oldMovedAlternative=red dim
 
 [user]
-	name = Pavel Mineev
-	email = pavel@mineev.me
+	name = Paul Mineev
+	email = paul@mineev.me
 
 [core]
 	excludesfile = ~/.gitignore
@@ -27,7 +27,7 @@
 
 [diff]
 	algorithm = patience
-	colorMoved=default
+	colorMoved = default
 
 [apply]
 	whitespace = nowarn
@@ -124,8 +124,3 @@
 [push]
 	default = simple
 
-[url "https://"]
-	insteadof = git@
-
-[url "https://github.com/"]
-	insteadof = git@github.com:
