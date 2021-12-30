@@ -23,7 +23,7 @@ cask "webpquicklook"                                # https://github.com/dchest/
 
 cask "setapp"                                        # https://go.setapp.com/invite/6thxftx0 (Alt AppStore by subscribe)
 cask "little-snitch"                                 # https://www.obdev.at/products/littlesnitch/index.html
-cask "google-chrome"                       	         
+cask "google-chrome"
 cask "firefox"
 cask "iterm2"                                        # https://www.iterm2.com
 cask "tunnelblick"                                   # https://www.tunnelblick.net
@@ -36,11 +36,16 @@ cask "obs"
 cask "epoccam"
 cask "docker"                                        # https://www.dropbox.com
 cask "docker-compose"
+cask "logitech-options"
+cask "notion"                                        # https://notion.so
+cask "zoom"                                          # https://zoom.us
+cask "philips-hue-sync"                              # https://www.philips.com/en-us/hue/
+cask "protonvpn"                                     # https://protonvpn.com
 
 cask "homebrew/cask-drivers/shureplus-motiv"         # Shure Motiv for MV microphones
 cask "homebrew/cask-fonts/font-jetbrains-mono"       # Font for code
 
-mas "Enpass", id: 732710998                          # https://www.enpass.io
-mas "Magnet", id: 441258766                          # http://magnet.crowdcafe.com
+mas "Enpass",   id: 732710998                        # https://www.enpass.io
+mas "Magnet",   id: 441258766                        # http://magnet.crowdcafe.com
 mas "Telegram", id: 747648890
-mas "Slack", id: 803453959
+mas "Slack",    id: 803453959
