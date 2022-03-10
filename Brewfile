@@ -7,7 +7,6 @@ tap "homebrew/core"
 cask_args appdir: "/Applications", require_sha: true
 
 brew "mas"                                          # https://github.com/mas-cli/mas (Mac App Store CLI)
-brew "fish"                                         # Nice shell
 brew "tig"                                          # https://jonas.github.io/tig/ (Terminal UI for Git)
 brew "node"                                         # Node.js
 brew "ssh-copy-id"                                  # Pass your RSA keys on remote server
@@ -35,12 +34,12 @@ cask "figma"
 cask "obs"
 cask "epoccam"
 cask "docker"                                        # https://www.dropbox.com
-cask "docker-compose"
 cask "logitech-options"
 cask "notion"                                        # https://notion.so
 cask "zoom"                                          # https://zoom.us
 cask "philips-hue-sync"                              # https://www.philips.com/en-us/hue/
 cask "protonvpn"                                     # https://protonvpn.com
+cask "sonos"
 
 cask "homebrew/cask-drivers/shureplus-motiv"         # Shure Motiv for MV microphones
 cask "homebrew/cask-fonts/font-jetbrains-mono"       # Font for code
