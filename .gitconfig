@@ -98,7 +98,7 @@
 	b = branch
 	diff = diff --word-diff
 	dc = diff --cached
-  pf = push --force
+	pf = push --force
 
 	### Stash operations
 
