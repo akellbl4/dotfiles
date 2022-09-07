@@ -84,7 +84,6 @@
 	lt = describe --tags --abbrev=0
 
 	### Basic Shortcuts
-
 	cp = cherry-pick
 	st = status -s
 	cl = clone
