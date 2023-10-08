@@ -18,7 +18,6 @@ brew "iperf"
 brew "mkcert"
 brew "nvm"
 
-cask "qlcolorcode"                                  # https://github.com/anthonygelibert/QLColorCode
 cask "qlimagesize"                                  # https://github.com/Nyx0uf/qlImageSize
 cask "qlmarkdown"                                   # https://github.com/toland/qlmarkdown
 cask "qlstephen"                                    # https://github.com/whomwah/qlstephen (Plaint ]text files)
@@ -38,7 +37,6 @@ cask "spotify"
 cask "discord"
 cask "figma"
 cask "obs"
-cask "epoccam"
 cask "docker"                                        # https://www.dropbox.com
 cask "logitech-options"
 cask "notion"                                        # https://notion.so
