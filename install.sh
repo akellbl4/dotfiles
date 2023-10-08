@@ -11,7 +11,6 @@ else
 	git clone https://github.com/akellbl4/dotfiles.git $dir
 	echo "Pulling success"
 	echo "Adding source file..."
-	curl -sL https://git.io/fisher | source && fisher install jorgebucaran/fisher
 
 	if [[ "$1" == "--macos" && "$2" == "--change-defaults" ]]; then
 		source macos_custom_settings.sh
@@ -39,9 +38,6 @@ declare -a files=(
 	.editorconfig
 	.gitconfig
 )
-
-echo "Installing terminall aliases..."
-cp $dir/aliases.fish ~/.config/fish/functions
 
 echo "Linking dotfiles..."
 for i in ${files[@]}; do
