@@ -15,6 +15,7 @@ brew "go"
 brew "iperf"
 brew "mkcert"
 brew "nvm"
+brew "git"
 
 cask "qlimagesize"                                  # https://github.com/Nyx0uf/qlImageSize
 cask "qlmarkdown"                                   # https://github.com/toland/qlmarkdown
