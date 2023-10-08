@@ -25,6 +25,7 @@ cask "qlvideo"                                      # https://github.com/Margina
 cask "quicklook-json"                               # http://www.sagtau.com/quicklookjson.html
 cask "webpquicklook"                                # https://github.com/dchest/webp-quicklook
 
+cask "raycast"                                       # Spotlight / Alfred replacement https://www.raycast.com
 cask "setapp"                                        # https://go.setapp.com/invite/6thxftx0 (Alt AppStore by subscribe)
 cask "little-snitch"                                 # https://www.obdev.at/products/littlesnitch/index.html
 cask "google-chrome"
