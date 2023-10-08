@@ -46,6 +46,7 @@ cask "protonvpn"                                     # https://protonvpn.com
 cask "sonos"
 cask "docker"
 cask "via"
+cask "orion"                                         # Privacy focused Safari like browser https://browser.kagi.com 
 
 cask "homebrew/cask-drivers/shureplus-motiv"         # Shure Motiv for MV microphones
 cask "homebrew/cask-fonts/font-jetbrains-mono"       # Font for code
