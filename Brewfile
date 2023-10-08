@@ -55,3 +55,4 @@ mas "Magnet",      id: 441258766                        # http://magnet.crowdcaf
 mas "Telegram",    id: 747648890
 mas "Slack",       id: 803453959
 mas "Hidden Bar",  id: 1452453066
+mas "Velja",       id: 1607635845
