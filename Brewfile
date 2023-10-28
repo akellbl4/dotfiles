@@ -43,7 +43,6 @@ cask "zoom"                                          # https://zoom.us
 cask "philips-hue-sync"                              # https://www.philips.com/en-us/hue/
 cask "protonvpn"                                     # https://protonvpn.com
 cask "sonos"
-cask "docker"
 cask "via"
 cask "orion"                                         # Privacy focused Safari like browser https://browser.kagi.com 
 
