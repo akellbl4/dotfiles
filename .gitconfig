@@ -19,7 +19,7 @@
 
 [user]
 	name = Paul Mineev
-	email = paul@mineev.me
+	email = pmineev@blend.com
 
 [core]
 	excludesfile = ~/.gitignore
@@ -93,6 +93,7 @@
 	cma = commit -am
 	ca = commit --amend
 	c = checkout
+  cc = !git checkout $(git branch | fzf)
 	co =  checkout -b
 	b = branch
 	diff = diff --word-diff
