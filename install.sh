@@ -2,35 +2,34 @@
 dir="$HOME/.dotfiles"
 
 if [[ -d $dir ]]; then
-	echo "Update starts..."
+	echo "Updating dotfiles..."
 	cd $dir
 	git pull origin master
 	echo "Pulling success"
 else
-	echo "Install starts..."
+	echo "Installing dotfiles..."
 	git clone https://github.com/akellbl4/dotfiles.git $dir
-	echo "Pulling success"
-	echo "Adding source file..."
+	echo "Dotfiles downloaded"
 
 	if [[ "$1" == "--macos" && "$2" == "--change-defaults" ]]; then
+ 		echo "Applying mac defaults"
 		source macos_custom_settings.sh
 	fi
 fi
 
 if [[ "$1" == "--macos" ]]; then
-	echo "Check Homebrew installation..."
 	if [[ -n $(brew -v | grep -iE "^homebrew") ]]; then
+		echo "Run brew updates"
 		brew doctor
 		brew update
 		brew upgrade
 	else
-		echo "Brew not found."
 		echo "Installing Homebrew..."
 		/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-		echo "Brew installed"
+		echo "Homebrew installed"
 	fi
 
-	echo "Installing brew bundle..."
+	echo "Installing packages from brew"
 	brew bundle
 fi
 
