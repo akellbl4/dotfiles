@@ -1,14 +1,14 @@
 #!/usr/bin/env sh
-dir="$HOME/.dotfiles"
+DOTFILES_DIR="$HOME/.dotfiles"
 
-if [[ -d $dir ]]; then
+if [[ -d $DOTFILES_DIR ]]; then
 	echo "Updating dotfiles..."
-	cd $dir
+	cd $DOTFILES_DIR
 	git pull origin master
 	echo "Pulling success"
 else
 	echo "Installing dotfiles..."
-	git clone https://github.com/akellbl4/dotfiles.git $dir
+	git clone https://github.com/akellbl4/dotfiles.git $DOTFILES_DIR
 	echo "Dotfiles downloaded"
 
 	if [[ "$1" == "--macos" && "$2" == "--change-defaults" ]]; then
@@ -41,7 +41,7 @@ declare -a files=(
 echo "Linking dotfiles..."
 for i in ${files[@]}; do
 	# create symbolic link if not exists
-	[[ -L $HOME/$i ]] || ln -sv $dir/$i $HOME/$i
+	[[ -L $HOME/$i ]] || ln -sv $DOTFILES_DIR/$i $HOME/$i
 done
 echo
 echo "Done."
