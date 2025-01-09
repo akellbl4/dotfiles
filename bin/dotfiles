@@ -2,16 +2,16 @@
 set -e
 set -a
 
-export DOTFILES_DIR=${DOTFILES_DIR:-$HOME/.dotfiles}
+export DOTFILES_DIR="${DOTFILES_DIR:-$HOME/.dotfiles}"
 
-source $DOTFILES_DIR/.zshrc
-source $DOTFILES_DIR/utils.sh
+. "$DOTFILES_DIR/.zshrc"
+. "$DOTFILES_DIR/utils.sh"
 
 COMMAND=$1
 CURRENT_DIR=$(pwd)
 
-if [[ $COMMAND == "install" || $COMMAND == "update" ]]; then
-	if [[ ! -d $HOME/.oh-my-zsh ]]; then
+if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
+	if [ ! -d "$HOME/.oh-my-zsh" ]; then
 		log "success" "Oh My Zsh! updated"
 		log "info" "Installing Oh My Zsh!"
 		sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
@@ -19,44 +19,44 @@ if [[ $COMMAND == "install" || $COMMAND == "update" ]]; then
 
 	dotfiles
 
-	if [[ $OSTYPE == darwin*  ]]; then
+	if [ "$(uname)" = "Darwin" ]; then
 		user_folders
 		macos_defaults
-		if [[ -n $(brew -v | grep -iE "^homebrew") ]]; then
+		if [ -n "$(brew -v | grep -iE "^homebrew")" ]; then
 			log "info" "Updating Homebrew"
 			brew update
 			brew upgrade
-			brew bundle install --file=$DOTFILES_DIR/Brewfile --quiet
+			brew bundle install --file="$DOTFILES_DIR/Brewfile" --quiet
 			brew cleanup
 			log "success" "$(brew -v) updated with all packages"
 		else
 			log "info" "Installing Homebrew"
 			/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-			if [[ $? -ne 0 ]]; then
+			if [ $? -ne 0 ]; then
 				log "error" "Homebrew installation failed"
 			else
-				source $DOTFILES_DIR/.zshrc
+				. "$DOTFILES_DIR/.zshrc"
 				log "info" "Next steps listed above are applied"
 				log "success" "$(brew -v) installed"
-				brew bundle install --file=$DOTFILES_DIR/Brewfile
+				brew bundle install --file="$DOTFILES_DIR/Brewfile"
 			fi
 		fi
 	fi
 
-	if [[ $COMMAND == "install" ]]; then
+	if [ "$COMMAND" = "install" ]; then
 		log "final" "Dotfiles installed"
 	fi
-	if [[ $COMMAND == "update" ]]; then
+	if [ "$COMMAND" = "update" ]; then
 		log "final" "Dotfiles updated"
 	fi
 
-	cd $CURRENT_DIR
+	cd "$CURRENT_DIR"
 	env zsh -l
 fi
 
 
-if [[ $COMMAND == "help" || $COMMAND == "" ]]; then
-	echo -e "Usage: dotfiles [update|help]"
+if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
+	printf "Usage: dotfiles [update|help]\n"
 fi
 
 exit 0
