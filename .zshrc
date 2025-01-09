@@ -4,8 +4,10 @@ init_zsh() {
 	ZSH_THEME="robbyrussell"
 	# shellcheck disable=SC2034
 	plugins=(git)
-	# shellcheck disable=SC1091
-	[[ -s "$ZSH/oh-my-zsh.sh" ]] && source "$ZSH/oh-my-zsh.sh"
+	if [[ -s "$ZSH/oh-my-zsh.sh" && "$0" == *zsh ]]; then
+		# shellcheck disable=SC1091
+	 source "$ZSH/oh-my-zsh.sh"
+	fi
 }
 
 init_zsh
