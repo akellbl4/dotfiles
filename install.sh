@@ -30,9 +30,10 @@ fi
 echo "Checking for Homebrew..."
 if [[ -n $(brew -v | grep -iE "^homebrew") ]]; then
 	echo "Updating homebrew..."
-	brew doctor  --quiet
-	brew update  --quiet
-	brew upgrade  --quiet
+	brew doctor --quiet
+	brew update --quiet
+	brew upgrade --quiet
+	brew cleanup --quiet
 	echo "Homebrew updated"
 else
 	echo "Installing Homebrew..."
@@ -49,7 +50,7 @@ brew bundle --quiet --file=$DOTFILES_DIR/Brewfile
 echo "Linking dotfiles..."
 for file in ${DOTFILES[@]}; do
 	# create symbolic link if not exists
-	if [[ -L $HOME/$file ]]; then 
+	if [[ -L $HOME/$file ]]; then
 		rm -rf $HOME/$file
 	fi
 
