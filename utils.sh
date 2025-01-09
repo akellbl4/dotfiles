@@ -8,34 +8,34 @@ log() {
 	level=$1
 	message=$2
 	if [[ $level == "info" ]]; then
-		echo "\033[1;34m=>\033[0m $message"
+		printf "\033[1;34m=>\033[0m %s\n" "$message"
 	elif [[ $level == "success" ]]; then
-		echo "\033[1;32m=>\033[0m \033[0;32m $message\033[0m"
+		printf "\033[1;32m=>\033[0m \033[0;32m %s\033[0m\n" "$message"
 	elif [[ $level == "error" ]]; then
-		echo "\033[1;41;30m ERROR \033[0m \033[0;31m $message\033[0m" > /dev/stderr
+		printf "\033[1;41;30m ERROR \033[0m \033[0;31m %s\033[0m\n" "$message" > /dev/stderr
 	elif [[ $level == "final" ]]; then
-		echo "\033[1;42;30m DONE \033[0m \033[0;33m $message\033[0m"
+		printf "\033[1;42;30m DONE \033[0m \033[0;33m %s\033[0m\n" "$message"
 	else
-		echo $level
+		echo "$level"
 	fi
 }
 
 dotfiles() {
 	if [[ -d $DOTFILES_DIR ]]; then
 		log "info" "Updating dotfiles..."
-		cd $DOTFILES_DIR
+		cd "${DOTFILES_DIR}" || exit
 		git pull origin master
 		log "success" "Dotfiles updated"
 	else
 		log "info" "Installing dotfiles..."
-		git clone https://github.com/akellbl4/dotfiles.git $DOTFILES_DIR
+		git clone https://github.com/akellbl4/dotfiles.git "$DOTFILES_DIR"
 		log "success" "Dotfiles downloaded"
 	fi
 
 
-	for file in ${DOTFILES[@]}; do
-		rm -rf $HOME/$file
-		output=$(ln -sv $DOTFILES_DIR/$file $HOME/$file)
+	for file in "${DOTFILES[@]}"; do
+		rm -rf "${HOME:?}/${file:?}"
+		ln -sv "$DOTFILES_DIR/$file" "$HOME/$file" 2>&1
 	done
 
 	log "success" "Dotfiles linked"
@@ -54,7 +54,7 @@ user_folders() {
 
 	if [[ ! -d ~/Developer ]]; then
 		mkdir ~/Developer;
-		log "success" "~/Developer folder created"
+		log "success" "$HOME/Developer folder created"
 	else
 		log "info" "Developer folder already exists"
 	fi

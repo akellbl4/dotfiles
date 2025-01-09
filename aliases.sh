@@ -3,7 +3,7 @@ alias p="cd ~/Developer"
 alias dl="cd ~/Downloads"
 
 alias ip="curl -s http://checkip.dyndns.com/ | sed 's/[^0-9\.]//g'"
-alias freewifi="sudo ifconfig en0 ether `openssl rand -hex 6 | sed 's/\(..\)/\1:/g; s/.$//'`"
+alias freewifi='sudo ifconfig en0 ether $(openssl rand -hex 6 | sed "s/\(..\)/\1:/g; s/.$//")'
 
 # Show/hide hidden files in Finder
 alias show="defaults write com.apple.finder AppleShowAllFiles -bool true && killall Finder"
