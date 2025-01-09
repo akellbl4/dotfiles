@@ -61,6 +61,8 @@ fi
 
 if [ "$COMMAND" = "link" ]; then
 	dotfiles
+	cd "$CURRENT_DIR"
+	env zsh -l
 fi
 
 if [ "$COMMAND" = "bundle" ]; then
