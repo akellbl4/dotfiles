@@ -1,0 +1,108 @@
+[include]
+	path =.gitconfig.user
+
+[core]
+	excludesfile = ~/.gitignore
+	pager = less -x4 -r
+
+[help]
+	autocorrect = 1
+
+[push]
+	default = simple
+
+[commit]
+	gpgsign = true
+
+[diff]
+	algorithm = patience
+	colorMoved = default
+
+[apply]
+	whitespace = nowarn
+
+[alias]
+	# Simple commands
+	cp = cherry-pick
+	st = status -s
+	cl = clone
+	a = add
+	ai = add --interactive
+	ci = commit
+	cma = commit -am
+	ca = commit --amend
+	c = checkout
+	cc = !git checkout $(git branch | fzf)
+	co =  checkout -b
+	b = branch
+	diff = diff --word-diff
+	dc = diff --cached
+	pf = push --force
+	ir = rebase -i
+	undo = reset --soft HEAD^
+	rename = commit --amend --no-edit --no-verify
+
+	# Forward to tig
+	log = "tig log"
+	stash = "tig stash"
+
+	# Remove merged branches
+	cleanup = "!git branch --merged | grep -v '\\*' | xargs -n 1 git branch -d"
+	# Print all aliases
+	la = "!git config -l | grep alias | cut -c 7-"
+	# Stash as snapshot
+	snapshot = !git stash save "snapshot: $(date)" && git stash apply "stash@{0}"
+
+[color]
+	ui = auto
+
+[color "status"]
+    added = green
+    changed = yellow
+    untracked = red
+
+[color "branch"]
+    current = yellow bold
+    local = green
+    remote = cyan
+
+[color "merge"]
+    conflict = red bold
+
+[color "interactive"]
+    header = cyan
+    help = yellow
+    instruction = bold
+
+[color "grep"]
+	selected = 8
+	filename = normal
+	linenumber = 8
+	separator = 8
+
+[color "diff"]
+	new=green
+	old=red
+	newMoved=green bold
+	oldMoved=red bold
+	newMoved=green dim
+	oldMoved=red dim
+	newMovedAlternative=green dim
+	oldMovedAlternative=red dim
+	meta = yellow
+	frag = magenta bold
+	func = green bold
+	context = normal
+
+[color "error"]
+	error = red bold
+
+[submodule]
+	recurse = true
+
+[commit]
+	gpgsign=true
+
+[gpg]
+	program = gpg
+

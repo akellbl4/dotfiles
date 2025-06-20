@@ -1,0 +1,18 @@
+.monaco-workbench
+  .pane-composite-part
+  > .header-or-footer
+  > .composite-bar-container
+  > .composite-bar
+  > .monaco-action-bar
+  .action-item.icon
+  .badge.compact,
+.monaco-workbench
+  .pane-composite-part
+  > .title
+  > .composite-bar-container
+  > .composite-bar
+  > .monaco-action-bar
+  .action-item.icon
+  .badge.compact {
+  height: 28px !important;
+}
