@@ -1,0 +1,148 @@
+#!/usr/bin/env sh
+
+set -e
+set -a
+
+# Source shared variables
+if [ -f "$HOME/.dotfiles/src/variables.sh" ]; then
+		. "$HOME/.dotfiles/src/variables.sh"
+fi
+
+export DOTFILES_ROOT="$HOME/.dotfiles"
+
+if [ ! -d "$DOTFILES_ROOT" ]; then
+		log "error" "Dotfiles not found"
+		exit 1
+fi
+
+. "$DOTFILES_ROOT/utils.sh"
+
+COMMAND=$1
+CURRENT_DIR=$(pwd)
+
+# Print the title at the start of any command
+printf "\n${BOLD}⚙️  Dotfiles${RESET}\n\n"
+
+if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
+		if [ "$2" != "-y" ]; then
+				read -p "Create default user folders? (Y/n): " create_user_folders
+				read -p "Update macOS defaults? (Y/n): " update_macos_defaults
+				read -p "Configure Git user settings? (Y/n): " setup_git_user
+				read -p "Enable GPG agent and link configuration? (Y/n): " link_gpg_agent
+		else
+				setup_git_user="y"
+				update_macos_defaults="y"
+				configure_git_user="y"
+				link_gpg_agent="y"
+		fi
+
+		link_gpg_agent=${link_gpg_agent:-y,,}
+		create_user_folders=${create_user_folders:-y,,}
+		update_macos_defaults=${update_macos_defaults:-y,,}
+		setup_git_user=${setup_git_user:-y,,}
+
+		log "info" "Setting up dotfiles..."
+
+		if [ ! -f "$DOTFILES_SRC/.gitconfig.user" ] && [ "$setup_git_user" = "y" ]; then
+				configure_git_user
+		fi
+
+		if [ ! -d "$HOME/.oh-my-zsh" ]; then
+				log "info" "Installing Oh My Zsh!"
+				sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+		fi
+
+		dotfiles
+
+		if [ "$(uname)" = "Darwin" ]; then
+			if [ $create_user_folders = "y" ]; then
+					log "info" "Creating default user folders"
+					user_folders
+					log "success" "Default user folders created"
+			fi
+			if [ $update_macos_defaults = "y" ]; then
+					log "info" "Updating macOS defaults"
+					macos_defaults
+					log "success" "macOS defaults updated"
+			fi
+			if [ -n "$(brew -v | grep -iE "^homebrew")" ]; then
+					log "info" "Updating Homebrew"
+					brew update
+					brew bundle --file="$DOTFILES_ROOT/Brewfile" --quiet --upgrade
+					brew cleanup
+					log "success" "Homebrew updated with all packages"
+			else
+					log "info" "Installing Homebrew"
+					/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+					if [ $? -ne 0 ]; then
+							log "error" "Homebrew installation failed"
+					else
+							. "$DOTFILES_ROOT/src/.zshrc"
+							log "success" "Homebrew installed"
+							brew bundle --file="$DOTFILES_ROOT/Brewfile" --quiet
+					fi
+			fi
+		fi
+
+		if [ $link_gpg_agent = "y" ]; then
+				if [ -f "$HOME/.gnupg/gpg-agent.conf" ]; then
+					read -p "gpg-agent.conf already exists. Do you want to backup it? (Y/n): " backup_gpg_agent
+					backup_gpg_agent=${backup_gpg_agent:-y,,}
+				fi
+				if [ "$backup_gpg_agent" = "y" ]; then
+						log "info" "Backing up existing gpg-agent.conf"
+						mv "$HOME/.gnupg/gpg-agent.conf" "$HOME/.gnupg/gpg-agent.conf.$(date "+%Y%m%d%H%M%S").bak"
+						log "success" "gpg-agent.conf backed up successfully."
+				else
+						log "info" "Skipping backup of gpg-agent.conf."
+				fi
+				ln -sv "$DOTFILES_ROOT/src/gpg-agent.conf" "$HOME/.gnupg/gpg-agent.conf"
+				log "success" "gpg-agent.conf linked successfully."
+		fi
+
+		if [ "$COMMAND" = "install" ]; then
+				log "success" "Dotfiles installed"
+		fi
+		if [ "$COMMAND" = "update" ]; then
+				log "success" "Dotfiles updated"
+		fi
+
+		cd "$CURRENT_DIR"
+		env zsh -l
+fi
+
+if [ "$COMMAND" = "link" ]; then
+		log "info" "Linking dotfiles..."
+		dotfiles
+		. "$HOME/.zshrc"
+		cd "$CURRENT_DIR"
+		log "success" "Dotfiles linked"
+fi
+
+if [ "$COMMAND" = "bundle" ]; then
+		log "info" " Installing Homebrew packages..."
+		brew bundle install --file="$DOTFILES_ROOT/Brewfile"
+		log "success" "Homebrew packages installed"
+fi
+
+if [ "$COMMAND" = "config-user" ]; then
+		configure_git_user
+		log "success" "Git user settings updated."
+fi
+
+if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
+		log "" "${BOLD}Usage${RESET}"
+		log "" "dotfiles [install|link|bundle|update|config-user|help]" 1
+
+		log "" "\n${BOLD}Commands${RESET}"
+		log "" "${BOLD}install${RESET}      📥 Installs the dotfiles, sets up Oh My Zsh, Homebrew, and applies macOS defaults." 2
+		log "" "${BOLD}update${RESET}       🔄 Updates the dotfiles and re-applies configurations, ensuring everything is up-to-date." 2
+		log "" "${BOLD}link${RESET}         🔗 Links the dotfiles to your home directory, ensuring all configurations are properly applied." 2
+		log "" "${BOLD}bundle${RESET}       🍺 Installs all Homebrew packages listed in the Brewfile." 2
+		log "" "${BOLD}config-user${RESET}  🛠️ Configures Git user settings including name, email, and signing key." 2
+		log "" "${BOLD}help${RESET}         ❓ Displays usage information for the dotfiles command." 2
+
+		log "success" "\nEnjoy managing your development environment with Dotfiles!\n"
+fi
+
+exit 0
