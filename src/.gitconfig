@@ -10,6 +10,7 @@
 
 [push]
 	default = simple
+	autoSetupRemote = true
 
 [commit]
 	gpgsign = true
@@ -41,6 +42,7 @@
 	ir = rebase -i
 	undo = reset --soft HEAD^
 	rename = commit --amend --no-edit --no-verify
+	sync = "!git pull origin $(git remote show $(git remote) | awk '/HEAD branch/ {print $NF}') --rebase"
 
 	# Forward to tig
 	log = "tig log"
