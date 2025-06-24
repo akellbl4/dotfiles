@@ -1,4 +1,4 @@
-. "$HOME/.dotfiles/variables.sh"
+. "$DOTFILES_ROOT/variables.sh"
 
 # Ensure Oh My Zsh is sourced correctly
 if [ -f "$DOTFILES_ROOT/oh-my-zsh.sh" ]; then
