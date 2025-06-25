@@ -25,21 +25,19 @@ printf "\n${BOLD}⚙️  Dotfiles${RESET}\n\n"
 
 if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		if [ "$2" != "-y" ]; then
-				read -p "Create default user folders? (Y/n): " create_user_folders
-				read -p "Update macOS defaults? (Y/n): " update_macos_defaults
-				read -p "Configure Git user settings? (Y/n): " setup_git_user
-				read -p "Enable GPG agent and link configuration? (Y/n): " link_gpg_agent
-		else
-				setup_git_user="y"
-				update_macos_defaults="y"
-				configure_git_user="y"
-				link_gpg_agent="y"
+				printf "Create default user folders? (Y/n) > " >&2
+				read -r create_user_folders
+				create_user_folders=${create_user_folders:-y,,}
+				printf "Update macOS defaults? (Y/n) > " >&2
+		read -r update_macos_defaults
+				update_macos_defaults=${update_macos_defaults:-y,,}
+				printf "Configure Git user settings? (Y/n) > " >&2
+				read -r setup_git_user
+				setup_git_user=${setup_git_user:-y,,}
+				printf "Enable GPG agent and link configuration? (Y/n) > " >&2
+		read -r link_gpg_agent
+				link_gpg_agent=${link_gpg_agent:-y,,}
 		fi
-
-		link_gpg_agent=${link_gpg_agent:-y,,}
-		create_user_folders=${create_user_folders:-y,,}
-		update_macos_defaults=${update_macos_defaults:-y,,}
-		setup_git_user=${setup_git_user:-y,,}
 
 		log "info" "Setting up dotfiles..."
 
@@ -55,12 +53,12 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		dotfiles
 
 		if [ "$(uname)" = "Darwin" ]; then
-			if [ $create_user_folders = "y" ]; then
+			if [ "$create_user_folders" = "y" ]; then
 					log "info" "Creating default user folders"
 					user_folders
 					log "success" "Default user folders created"
 			fi
-			if [ $update_macos_defaults = "y" ]; then
+			if [ "$update_macos_defaults" = "y" ]; then
 					log "info" "Updating macOS defaults"
 					macos_defaults
 					log "success" "macOS defaults updated"
@@ -84,9 +82,9 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 			fi
 		fi
 
-		if [ $link_gpg_agent = "y" ]; then
+		if [ "$link_gpg_agent" = "y" ]; then
 				if [ -f "$HOME/.gnupg/gpg-agent.conf" ]; then
-					read -p "gpg-agent.conf already exists. Do you want to backup it? (Y/n): " backup_gpg_agent
+					read -r "gpg-agent.conf already exists. Do you want to backup it? (Y/n): " backup_gpg_agent
 					backup_gpg_agent=${backup_gpg_agent:-y,,}
 				fi
 				if [ "$backup_gpg_agent" = "y" ]; then
