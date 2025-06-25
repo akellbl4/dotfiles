@@ -1,3 +1,5 @@
+export DOTFILES_ROOT="$HOME/.dotfiles"
+
 . "$DOTFILES_ROOT/variables.sh"
 
 # Ensure Oh My Zsh is sourced correctly
