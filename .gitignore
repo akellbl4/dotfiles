@@ -13,4 +13,4 @@
 
 # User specific configuration files
 .gitconfig.user
-.zshrc.user
+.zshrc.user.sh

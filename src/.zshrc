@@ -16,8 +16,8 @@ if [ -f "$DOTFILES_ROOT/gpg-agent.sh" ]; then
 		. "$DOTFILES_ROOT/gpg-agent.sh"
 fi
 
-if [ -f "$DOTFILES_ROOT/.zshrc.user" ]; then
-    . "$DOTFILES_ROOT/.zshrc.user"
+if [ -f "$DOTFILES_ROOT/.zshrc.user.sh" ]; then
+    . "$DOTFILES_ROOT/.zshrc.user.sh"
 fi
 
 # Add dotfiles bin directory to PATH
