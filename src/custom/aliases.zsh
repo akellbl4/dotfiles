@@ -23,3 +23,5 @@ alias afk="/System/Library/CoreServices/Menu\ Extras/User.menu/Contents/Resource
 
 # Add colors to grep by alias because GREP_OPTIONS is deprecated
 alias grep="grep --color=auto"
+
+alias reload="source $HOME/.zshrc && echo \"File .zshrc reloaded correctly\" || echo \"Syntax error, could not import the .zshrc file\"";
