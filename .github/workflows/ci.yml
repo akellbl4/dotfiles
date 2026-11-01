@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run shellcheck
-        run: shellcheck --shell=sh --severity=warning install.sh bin/dotfiles utils.sh variables.sh homebrew.sh gpg-agent.sh
+        run: shellcheck --shell=sh --severity=warning install.sh bin/dotfiles utils.sh agent-user.sh agent/gh agent/github-token agent/credential-helper variables.sh homebrew.sh gpg-agent.sh
 
   link:
     runs-on: macos-latest

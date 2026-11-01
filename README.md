@@ -44,6 +44,9 @@ The `dotfiles` command is on your `PATH` after install.
 | `dotfiles config-user` | Edits your Git name and email |
 | `dotfiles ai-tools` | Installs Claude Code and Codex, plus Cursor and T3 Code on machines with a desktop |
 | `dotfiles t3-autostart` | Installs the T3 Code server as a background service so it starts at login (open T3 Code once first) |
+| `dotfiles agent-user` | Creates a separate macOS user that runs the T3 Code server and its agents ([details](#agent-user)) |
+| `dotfiles agent-token <owner\|default>` | Saves a GitHub token for the agent user, for one GitHub user or org or as the default |
+| `dotfiles agent-pair` | Prints a pairing code to connect T3 Code to the agent user's server |
 | `dotfiles node` | Installs the latest Node LTS, pnpm and Bun |
 | `dotfiles podman` | Installs Podman and makes the `docker` command use it |
 | `dotfiles macos-vm [name]` | Installs Tart and creates a macOS virtual machine (Apple Silicon only) |
@@ -144,6 +147,35 @@ fnm and Bun come from Homebrew on macOS and from their official installers on Li
 - The official installers and AppImages go into `~/.local/bin`, and AppImages also get an app menu entry.
 - Both x64 and arm64 are supported.
 
+### Agent user
+
+On macOS, `dotfiles agent-user` runs T3 Code's server and every agent it starts as a separate, hidden, non-admin user named `agent`. They can't read your files or use your SSH key, GPG key, Keychain or `gh` login. GitHub access comes only from fine-grained tokens that you give the agent user.
+
+What it sets up (running it again updates everything in place):
+
+1. Creates the `agent` user (standard account, hidden from the login window, random password that isn't kept)
+2. Offers to make your home folder private (`chmod 700`). New users are in the `staff` group, which can read the default home folder.
+3. Installs into `/Users/agent/.local/bin`:
+   - [`agent/gh`](agent/gh), a `gh` wrapper that picks the token by repository owner (from `-R`/`--repo`, `GH_REPO`, `gh repo <command> owner/name` or the `origin` remote)
+   - [`agent/credential-helper`](agent/credential-helper), which gives git the same tokens for `https://github.com`
+   - a `t3` command that runs T3 Code's bundled server with the agent's own data in `/Users/agent/.t3`
+4. Configures the agent's git: your name and email, no commit signing, only the token credential helper, and `git@github.com:` and `ssh://git@github.com/` remotes rewritten to HTTPS
+5. Installs the `/Library/LaunchDaemons/dotfiles.t3-agent.plist` LaunchDaemon, which runs `t3 serve` as `agent` on `http://127.0.0.1:3780` from boot. Logs go to `/Users/agent/Library/Logs/t3-server.log`.
+
+Then:
+
+```sh
+dotfiles agent-token my-oss-org       # token for the org's repositories
+dotfiles agent-token default          # token for everything else, e.g. your personal repositories
+sudo -u agent -i claude               # log Claude Code in as the agent user
+sudo -u agent -i codex login          # log Codex in as the agent user
+dotfiles agent-pair                   # pairing code to connect the T3 Code app to the agent's server
+```
+
+Tokens are stored in `/Users/agent/.config/github-tokens/<owner>`, readable only by `agent`. A repository whose owner has no token uses `default`. Create fine-grained tokens with only the repositories and permissions the agents need, one per owner, since a token belongs to either your account or one org.
+
+`AGENT_USER` and `AGENT_T3_PORT` change the user name and port. To remove everything: `sudo launchctl bootout system/dotfiles.t3-agent`, `sudo rm /Library/LaunchDaemons/dotfiles.t3-agent.plist`, then `sudo sysadminctl -deleteUser agent`.
+
 ### Agent skills
 
 `skills/` holds the skills for every AI coding tool, adapted from [tstack](https://github.com/t3dotgg/tstack) (MIT, [`skills/LICENSE`](skills/LICENSE)). Each skill folder is symlinked into two places, so edits here apply right away:
@@ -232,6 +264,8 @@ To add a dotfile, put it in `src/`, `src/custom/` for Zsh files or `src/.config/
 bin/dotfiles        The dotfiles command
 install.sh          Bootstrap script used by the curl one-liner
 utils.sh            Shared helpers: linking, prompts, macOS defaults, GPG setup
+agent-user.sh       The agent user: account, git setup, T3 Code LaunchDaemon, tokens
+agent/              Scripts installed into the agent user's ~/.local/bin
 src/                Files linked into ~
 src/custom/         Files linked into ~/.oh-my-zsh/custom
 src/.config/<app>/  Files linked into ~/.config/<app>/ (Ghostty)
