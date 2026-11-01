@@ -804,6 +804,7 @@ setup_node() {
 }
 
 # Desired macOS defaults, one per line: currentHost (y/n)|domain|key|type|value|description
+# Type hotkey-off turns off the system keyboard shortcut with that id (key).
 macos_defaults_list() {
 	cat <<DEFAULTS
 y|-g|AppleFontSmoothing|int|0|Font smoothing off
@@ -815,11 +816,20 @@ n|com.apple.dock|show-recents|bool|false|No suggested and recent apps in Dock
 n|com.apple.screencapture|location|string|$HOME/Screenshots|Screenshots saved to ~/Screenshots
 n|com.apple.finder|_FXSortFoldersFirst|bool|true|Folders first in Finder
 n|com.apple.finder|_FXSortFoldersFirstOnDesktop|bool|true|Folders first on the desktop
+n|com.apple.controlcenter|NSStatusItem VisibleCC WiFi|bool|false|Wi-Fi hidden from the menu bar
+n|com.apple.Spotlight|NSStatusItem VisibleCC Item-0|bool|false|Spotlight hidden from the menu bar
+n|com.apple.symbolichotkeys|64|hotkey-off||Spotlight's ⌘Space shortcut off (free for Raycast)
 DEFAULTS
 }
 
 # True when a default already has the desired value
 macos_default_matches() {
+	if [ "$4" = "hotkey-off" ]; then
+		# A shortcut with no entry is on by default
+		[ "$(/usr/libexec/PlistBuddy -c "Print :AppleSymbolicHotKeys:$3:enabled" \
+			"$HOME/Library/Preferences/com.apple.symbolichotkeys.plist" 2>/dev/null)" = "false" ]
+		return
+	fi
 	if [ "$1" = "y" ]; then
 		current=$(defaults -currentHost read "$2" "$3" 2>/dev/null) || return 1
 	else
@@ -852,7 +862,11 @@ macos_defaults() {
 	restart_apps=""
 	changes=$(macos_defaults_list | while IFS='|' read -r host domain key type value description; do
 		macos_default_matches "$host" "$domain" "$key" "$type" "$value" && continue
-		if [ "$host" = "y" ]; then
+		if [ "$type" = "hotkey-off" ]; then
+			# 65535/49/1048576: no character, Space key, ⌘ (the Spotlight shortcut's own value)
+			defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add "$key" \
+				"<dict><key>enabled</key><false/><key>value</key><dict><key>parameters</key><array><integer>65535</integer><integer>49</integer><integer>1048576</integer></array><key>type</key><string>standard</string></dict></dict>"
+		elif [ "$host" = "y" ]; then
 			defaults -currentHost write "$domain" "$key" "-$type" "$value"
 		else
 			defaults write "$domain" "$key" "-$type" "$value"
@@ -871,6 +885,12 @@ macos_defaults() {
 	case "$changes" in *com.apple.dock*) restart_apps="$restart_apps Dock" ;; esac
 	case "$changes" in *com.apple.finder*) restart_apps="$restart_apps Finder" ;; esac
 	case "$changes" in *com.apple.screencapture*) restart_apps="$restart_apps SystemUIServer" ;; esac
+	case "$changes" in *com.apple.controlcenter*) restart_apps="$restart_apps ControlCenter" ;; esac
+	case "$changes" in *com.apple.Spotlight*) restart_apps="$restart_apps Spotlight" ;; esac
+	# Keyboard shortcut changes apply without logging out
+	case "$changes" in *com.apple.symbolichotkeys*)
+		/System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u >/dev/null 2>&1 || true ;;
+	esac
 	for app in $restart_apps; do
 		killall "$app" >/dev/null 2>&1 || true
 	done

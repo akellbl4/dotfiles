@@ -157,6 +157,8 @@ Listed in `macos_defaults_list` in [`utils.sh`](utils.sh). `install` and `update
 - No suggested and recent apps in the Dock
 - Screenshots saved to `~/Screenshots`
 - Folders listed first in Finder and on the desktop
+- Wi-Fi and Spotlight hidden from the menu bar
+- Spotlight's ⌘Space shortcut turned off, so it's free for Raycast. Raycast keeps its hotkey in its own settings, so set it once in Raycast → Settings → General → Raycast Hotkey (or during Raycast's onboarding on a new Mac).
 
 ### Ghostty
 
