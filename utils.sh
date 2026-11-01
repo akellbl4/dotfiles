@@ -638,6 +638,61 @@ setup_ai_tools() {
 	fi
 }
 
+# Install zsh, git and curl on Linux if they're missing (macOS ships them)
+ensure_base_packages() {
+	[ "$(uname)" = "Darwin" ] && return 0
+	missing_packages=""
+	for package in zsh git curl; do
+		command -v "$package" >/dev/null 2>&1 || missing_packages="$missing_packages $package"
+	done
+	[ -z "$missing_packages" ] && return 0
+
+	log "info" "Installing$missing_packages..."
+	case "$(linux_family)" in
+		debian)
+			# shellcheck disable=SC2086 # package list is meant to split
+			sudo apt-get update && sudo apt-get install -y $missing_packages
+			;;
+		fedora)
+			# shellcheck disable=SC2086
+			sudo dnf install -y $missing_packages
+			;;
+		fedora-atomic)
+			# shellcheck disable=SC2086
+			sudo rpm-ostree install $missing_packages
+			log "error" "Reboot to finish installing$missing_packages, then run the installer again."
+			return 1
+			;;
+		*)
+			log "error" "Install$missing_packages with your package manager, then run the installer again."
+			return 1
+			;;
+	esac
+}
+
+# Login shell of the current user
+login_shell() {
+	if [ "$(uname)" = "Darwin" ]; then
+		dscl . -read "/Users/$USER" UserShell 2>/dev/null | awk '{print $2}'
+	else
+		getent passwd "$USER" | cut -d: -f7
+	fi
+}
+
+zsh_is_default_shell() {
+	[ "$(basename "$(login_shell)")" = "zsh" ]
+}
+
+# Make zsh the login shell (Linux usually defaults to bash)
+set_zsh_default_shell() {
+	zsh_path=$(command -v zsh) || return 1
+	if sudo usermod --shell "$zsh_path" "$USER"; then
+		log "success" "zsh is now your default shell (applies to new logins)"
+	else
+		log "error" "Could not change the default shell. Run: chsh -s $zsh_path"
+	fi
+}
+
 macos_defaults() {
 	log "info" "Setting up macOS defaults..."
 	# Disable font smoothing

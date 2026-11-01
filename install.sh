@@ -12,6 +12,14 @@ DOTFILES_REPO="https://github.com/akellbl4/dotfiles.git"
 COMMAND=${1:-install}
 FLAGS=$2
 
+# git is needed to download the dotfiles; install it on Linux if missing
+if ! command -v git >/dev/null 2>&1; then
+	if command -v apt-get >/dev/null 2>&1; then
+		sudo apt-get update && sudo apt-get install -y git
+	elif command -v dnf >/dev/null 2>&1 && [ ! -e /run/ostree-booted ]; then
+		sudo dnf install -y git
+	fi
+fi
 if ! command -v git >/dev/null 2>&1; then
 	printf "\033[31mgit is required. On macOS run: xcode-select --install\033[0m\n" >&2
 	exit 1

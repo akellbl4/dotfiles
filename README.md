@@ -1,11 +1,11 @@
 # ⚙️ Dotfiles
 
-My macOS development environment: Zsh with Oh My Zsh, Homebrew packages, Git and GPG configuration, and a set of macOS defaults, managed by a single `dotfiles` command.
+My development environment: Zsh with Oh My Zsh, Git and GPG configuration, Podman, AI coding tools, and on macOS also Homebrew packages and system defaults, managed by a single `dotfiles` command.
 
 ## Requirements
 
-- macOS on Apple Silicon
-- Git (`xcode-select --install` if it is missing)
+- macOS on Apple Silicon, with Git (`xcode-select --install` if it is missing), or
+- Linux: Debian or Ubuntu, Fedora (including Asahi), or Bazzite/Silverblue. The installer adds zsh, git and curl if they're missing, using `sudo`.
 
 ## Install
 
@@ -15,17 +15,16 @@ curl -L https://github.com/akellbl4/dotfiles/raw/main/install.sh | bash
 
 The script clones this repository into `~/.dotfiles` (or updates it if it is already there) and runs `dotfiles install`, so the same command also updates an existing setup. It asks a few questions up front, then:
 
-1. Saves your Git name and email to `src/.gitconfig.user`
-2. Installs [Oh My Zsh](https://ohmyz.sh)
-3. Symlinks the files in `src/` into `~`, `src/custom/` into `~/.oh-my-zsh/custom` and each `src/.config/<app>/` into `~/.config/<app>/`
-4. Creates `~/Screenshots` and `~/Developer` if they're missing
-5. Applies [macOS defaults](#macos-defaults)
-6. Installs Homebrew and everything in the [`Brewfile`](Brewfile)
-7. Installs the [AI coding tools](#ai-coding-tools) on Linux (on macOS they come from the `Brewfile`)
-8. Sets up [Podman](#podman) and makes the `docker` command use it
-9. Links the GPG agent config and sets up a [commit signing key](#gpg)
+1. On Linux, installs zsh, git and curl if missing and offers to make zsh your default shell. On Bazzite and Silverblue, missing packages are added with `rpm-ostree`, so reboot and run the installer again.
+2. Saves your Git name and email to `src/.gitconfig.user`
+3. Installs [Oh My Zsh](https://ohmyz.sh)
+4. Symlinks the files in `src/` into `~`, `src/custom/` into `~/.oh-my-zsh/custom` and each `src/.config/<app>/` into `~/.config/<app>/`
+5. On macOS, creates `~/Screenshots` and `~/Developer` if they're missing, applies [macOS defaults](#macos-defaults), and installs Homebrew and everything in the [`Brewfile`](Brewfile)
+6. Installs the [AI coding tools](#ai-coding-tools) on Linux (on macOS they come from the `Brewfile`)
+7. Sets up [Podman](#podman) and makes the `docker` command use it
+8. Links the GPG agent config and sets up a [commit signing key](#gpg)
 
-Running it again is safe. It only asks about folders that are missing, shows your current Git user and signing key and only changes them if you choose to. Press Enter to accept the default shown in capitals (`Y/n` or `y/N`), or to keep the current value shown in brackets.
+Running it again is safe. It only asks about folders that are missing and about the default shell while it isn't zsh. It shows your current Git user and signing key and only changes them if you choose to. Press Enter to accept the default shown in capitals (`Y/n` or `y/N`), or to keep the current value shown in brackets.
 
 When there is no terminal to prompt on, the script runs `dotfiles install -y`, which answers yes to everything except the Git user and GPG key questions, since those need your input.
 

@@ -41,12 +41,20 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		backup_gpg_agent=y
 		setup_podman_answer=y
 		setup_ai_answer=y
+		set_default_shell=y
 	else
 		create_user_folders=n
-		if [ -n "$missing_folders" ]; then
-			create_user_folders=$(ask "Create missing user folders (${missing_folders% })?")
+		update_macos_defaults=n
+		set_default_shell=n
+		# User folders and macOS defaults only apply on macOS
+		if [ "$(uname)" = "Darwin" ]; then
+			if [ -n "$missing_folders" ]; then
+				create_user_folders=$(ask "Create missing user folders (${missing_folders% })?")
+			fi
+			update_macos_defaults=$(ask "Update macOS defaults?")
+		elif ! zsh_is_default_shell; then
+			set_default_shell=$(ask "Make zsh your default shell?")
 		fi
-		update_macos_defaults=$(ask "Update macOS defaults?")
 		if [ -n "$current_git_user" ]; then
 			setup_git_user=$(ask_no "Git user is $current_git_user. Edit it?")
 		else
@@ -66,6 +74,15 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 	fi
 
 	log "info" "Setting up dotfiles..."
+
+	# Linux: zsh, git and curl are needed by everything below
+	if ! ensure_base_packages; then
+		exit 1
+	fi
+
+	if [ "$set_default_shell" = "y" ] && [ "$(uname)" != "Darwin" ] && ! zsh_is_default_shell; then
+		set_zsh_default_shell
+	fi
 
 	if [ "$setup_git_user" = "y" ]; then
 		configure_git_user
