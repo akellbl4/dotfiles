@@ -18,7 +18,7 @@ The script clones this repository into `~/.dotfiles` (or updates it if it is alr
 1. On Linux, installs zsh, git, curl and unzip if missing and offers to make zsh your default shell. On Bazzite and Silverblue, missing packages are added with `rpm-ostree`, so reboot and run the installer again.
 2. Saves your Git name and email to `src/.gitconfig.user`
 3. Installs [Oh My Zsh](https://ohmyz.sh)
-4. Symlinks the files in `src/` into `~`, `src/custom/` into `~/.oh-my-zsh/custom` and each `src/.config/<app>/` into `~/.config/<app>/`
+4. Symlinks the files in `src/` into `~`, `src/custom/` into `~/.oh-my-zsh/custom` each `src/.config/<app>/` into `~/.config/<app>/`, and each [agent skill](#agent-skills) in `skills/` into `~/.claude/skills/` and `~/.codex/skills/`
 5. On macOS, creates `~/Screenshots` and `~/Developer` if they're missing and gives Screenshots a camera icon, applies [macOS defaults](#macos-defaults), and installs Homebrew and everything in the [`Brewfile`](Brewfile)
 6. Installs the latest [Node LTS, pnpm and Bun](#node-pnpm-and-bun), and moves to a newer LTS on later runs
 7. Installs the [AI coding tools](#ai-coding-tools) on Linux (on macOS they come from the `Brewfile`)
@@ -141,6 +141,24 @@ fnm and Bun come from Homebrew on macOS and from their official installers on Li
 - The official installers and AppImages go into `~/.local/bin`, and AppImages also get an app menu entry.
 - Both x64 and arm64 are supported.
 
+### Agent skills
+
+`skills/` holds skills for Claude Code and Codex, adapted from [tstack](https://github.com/t3dotgg/tstack) (MIT, [`skills/LICENSE`](skills/LICENSE)). Each skill folder is symlinked into `~/.claude/skills/` and `~/.codex/skills/`, so edits here apply right away. A real folder with the same name is moved to `~/.claude/skills.bak/` (or `~/.codex/skills.bak/`) first.
+
+| Skill | Say | What it does |
+| --- | --- | --- |
+| `full-send` | "full send" | Takes a change all the way to a merged PR unattended: proves it, reviews it, files it, babysits it, merges it |
+| `full-push` | "full push" | Same as `full-send`, but stops when the PR is ready for you to merge |
+| `council` | "council" | Gets review from three models from different providers and loops until they agree |
+| `sol-loop` | "sol loop" | Reviews a change with GPT Sol in a loop until both agents agree |
+| `file-pr` | "file a PR" | Files a short PR that leads with the problem, not an inventory of changes |
+| `takeover` | "take over" | Finishes someone else's PR, branch or agent thread and keeps their credit |
+| `babysit-pr` | "babysit" | Watches a PR through CI and review bots and fixes the real findings |
+| `modernize` | "modernize" | Rebases an old PR and decides if it should still exist |
+| `pr-comments` | (automatic) | Formats comments posted on your behalf: review comments (findings with a severity) and answers (fixed / won't fix / question) |
+
+Changes from upstream: `full-stop` is renamed `full-push`, and `leaving-pr-comments` is renamed `pr-comments`, with separate templates for review comments and answers. `babysit-pr` needs `python3` and an authenticated `gh`.
+
 ### Podman
 
 `dotfiles podman` (also offered by `install` and `update` until it's set up) works on macOS, Debian/Ubuntu and Fedora, including Asahi and Bazzite:
@@ -207,6 +225,7 @@ utils.sh            Shared helpers: linking, prompts, macOS defaults, GPG setup
 src/                Files linked into ~
 src/custom/         Files linked into ~/.oh-my-zsh/custom
 src/.config/<app>/  Files linked into ~/.config/<app>/ (Ghostty)
+skills/<name>/      Agent skills linked into ~/.claude/skills/ and ~/.codex/skills/
 *.sh                Snippets sourced by .zshrc (Homebrew, Oh My Zsh, Node, GPG)
 Brewfile            Homebrew packages
 gpg-agent.conf      Linked to ~/.gnupg/gpg-agent.conf

@@ -87,6 +87,37 @@ link_all() {
 		app_name=$(basename "$config_dir")
 		link_files "$config_dir" "$HOME/.config/$app_name" "$app_name config"
 	done
+
+	link_skills "$HOME/.claude/skills" "Claude Code skills"
+	link_skills "$HOME/.codex/skills" "Codex skills"
+}
+
+# Link each folder in skills/ into an agent's skills folder as a whole-folder
+# symlink, so files added to a skill later show up without relinking
+link_skills() {
+	target_dir=$1
+	name=$2
+
+	mkdir -p "$target_dir"
+	log "info" "Linking $name..."
+	for skill_dir in "$DOTFILES_ROOT"/skills/*/; do
+		[ -d "$skill_dir" ] || continue
+		skill_dir=${skill_dir%/}
+		target="$target_dir/$(basename "$skill_dir")"
+
+		# A real folder with the same name (e.g. copied by hand): back it up next to
+		# the skills folder, not inside it, where the agent would load it as a second skill
+		if [ -e "$target" ] && [ ! -L "$target" ]; then
+			backup_dir="$target_dir.bak"
+			mkdir -p "$backup_dir"
+			mv "$target" "$backup_dir/$(basename "$target").$(date "+%Y%m%d%H%M%S")"
+			log "info" "Moved existing $(basename "$target") to $backup_dir" 1
+		fi
+
+		# -n replaces an existing link instead of creating a link inside the folder it points to
+		log "info" "$(ln -sfnv "$skill_dir" "$target")" 1
+	done
+	log "success" "$name linked"
 }
 
 sync_repo() {
