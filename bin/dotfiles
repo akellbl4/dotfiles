@@ -17,10 +17,19 @@ fi
 COMMAND=$1
 CURRENT_DIR=$(pwd)
 
-# Print the title at the start of any command
-printf "\n%b⚙️  Dotfiles%b\n\n" "$BOLD" "$RESET"
+# Print the title at the start of any command (once, not again after restarting below)
+if [ -z "$DOTFILES_PULLED" ]; then
+	printf "\n%b⚙️  Dotfiles%b\n\n" "$BOLD" "$RESET"
+fi
 
 if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
+	# Pull first and restart with the updated script, so the questions and
+	# steps below always come from the latest version
+	if [ -z "$DOTFILES_PULLED" ]; then
+		pull_repo || log "error" "Continuing with the current version."
+		DOTFILES_PULLED=1 exec sh "$DOTFILES_ROOT/bin/dotfiles" "$@"
+	fi
+
 	missing_folders=$(missing_user_folders | tr '\n' ' ')
 	current_git_user=$(git_user_summary)
 
@@ -62,7 +71,7 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 	fi
 
-	sync_repo
+	link_all
 
 	if [ "$(uname)" = "Darwin" ]; then
 		if [ "$create_user_folders" = "y" ]; then

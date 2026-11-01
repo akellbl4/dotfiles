@@ -60,12 +60,12 @@ load_brew() {
 	command -v brew >/dev/null 2>&1
 }
 
-# Clone or update the dotfiles repo, then link everything into place
-sync_repo() {
+# Clone or update the dotfiles repo
+pull_repo() {
 	if [ -d "$DOTFILES_ROOT/.git" ]; then
 		log "info" "Updating dotfiles..."
 		if ! git -C "$DOTFILES_ROOT" pull --ff-only origin main; then
-			log "error" "Could not update $DOTFILES_ROOT (local changes or diverged history). Commit or stash them and retry."
+			log "error" "Could not update $DOTFILES_ROOT, see the git error above. If you have local changes, commit or stash them and retry."
 			return 1
 		fi
 		log "success" "Dotfiles updated"
@@ -74,7 +74,10 @@ sync_repo() {
 		git clone https://github.com/akellbl4/dotfiles.git "$DOTFILES_ROOT"
 		log "success" "Dotfiles downloaded"
 	fi
+}
 
+# Link everything into place
+link_all() {
 	link_files "$DOTFILES_ROOT/src" "$HOME" "Dotfiles"
 	link_files "$DOTFILES_ROOT/src/custom" "$HOME/.oh-my-zsh/custom" "ZSH files"
 
@@ -84,6 +87,11 @@ sync_repo() {
 		app_name=$(basename "$config_dir")
 		link_files "$config_dir" "$HOME/.config/$app_name" "$app_name config"
 	done
+}
+
+sync_repo() {
+	pull_repo
+	link_all
 }
 
 link_files() {
