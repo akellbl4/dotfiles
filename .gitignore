@@ -14,3 +14,6 @@
 # User specific configuration files
 .gitconfig.user
 .zshrc.user.sh
+
+# Claude Code worktrees
+.claude/worktrees/
