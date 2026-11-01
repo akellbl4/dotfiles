@@ -274,7 +274,7 @@ if [ "$COMMAND" = "agent-token" ]; then
 	add_agent_token "$token_owner"
 fi
 
-if [ "$COMMAND" = "agent-pair" ]; then
+if [ "$COMMAND" = "t3-pair" ]; then
 	pair_agent_t3
 fi
 
@@ -299,7 +299,7 @@ fi
 
 if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
 	log "" "${BOLD}Usage${RESET}"
-	log "" "dotfiles [install|link|bundle|update|config-user|gh|gpg-key|node|podman|ai-tools|t3-autostart|agent-user|agent-token|agent-pair|macos-vm|help]" 1
+	log "" "dotfiles [install|link|bundle|update|config-user|gh|gpg-key|node|podman|ai-tools|t3-autostart|agent-user|agent-token|t3-pair|macos-vm|help]" 1
 
 	log "" "\n${BOLD}Commands${RESET}"
 	log "" "${BOLD}install${RESET}      📥 Installs the dotfiles, sets up Oh My Zsh, Homebrew, and applies macOS defaults." 2
@@ -315,7 +315,7 @@ if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
 	log "" "${BOLD}t3-autostart${RESET} 🚀 Runs the T3 Code server as a background service that starts at login." 2
 	log "" "${BOLD}agent-user${RESET}   🔒 Creates a separate macOS user that runs the T3 Code server and its agents (macOS)." 2
 	log "" "${BOLD}agent-token${RESET}  🎟️ Saves a GitHub token for the agent user: dotfiles agent-token <owner|default>." 2
-	log "" "${BOLD}agent-pair${RESET}   🔗 Prints a pairing code to connect T3 Code to the agent user's server." 2
+	log "" "${BOLD}t3-pair${RESET}      🔗 Prints a pairing code to connect T3 Code to the agent user's server." 2
 	log "" "${BOLD}macos-vm${RESET}     🖥️ Installs Tart and creates a macOS VM (Apple Silicon). Optional VM name, default macos." 2
 	log "" "${BOLD}help${RESET}         ❓ Displays usage information for the dotfiles command." 2
 

@@ -144,8 +144,7 @@ install_agent_t3_service() {
 	<array>
 		<string>$AGENT_BIN/t3</string>
 		<string>serve</string>
-		<string>--host</string>
-		<string>127.0.0.1</string>
+		<string>--lan</string>
 		<string>--port</string>
 		<string>$AGENT_T3_PORT</string>
 	</array>
@@ -180,7 +179,7 @@ PLIST
 	# Reload so a changed plist or app path takes effect
 	sudo launchctl bootout "system/$AGENT_T3_LABEL" 2>/dev/null || true
 	if sudo launchctl bootstrap system "$AGENT_T3_PLIST"; then
-		log "success" "T3 Code server runs as $AGENT_USER on http://127.0.0.1:$AGENT_T3_PORT"
+		log "success" "T3 Code server runs as $AGENT_USER on port $AGENT_T3_PORT (this Mac, LAN and tailnet)"
 	else
 		log "error" "Could not start the T3 Code service, see $AGENT_HOME/Library/Logs/t3-server.log"
 		return 1
@@ -199,7 +198,7 @@ setup_agent_user() {
 	log "success" "Agent user ready. Next:"
 	log "" "1. Add GitHub tokens: dotfiles agent-token <owner>, and dotfiles agent-token default for the rest" 2
 	log "" "2. Log the agents in: sudo -u $AGENT_USER -i claude, then sudo -u $AGENT_USER -i codex login" 2
-	log "" "3. Connect T3 Code to the server: dotfiles agent-pair" 2
+	log "" "3. Connect T3 Code to the server: dotfiles t3-pair" 2
 }
 
 # Store a fine-grained token for one repository owner (or "default") in the agent's home
@@ -243,6 +242,6 @@ pair_agent_t3() {
 		log "error" "Set up the agent user first: dotfiles agent-user"
 		return 1
 	fi
-	log "info" "Pairing code for the T3 Code server on http://127.0.0.1:$AGENT_T3_PORT:"
+	log "info" "Pairing code for the T3 Code server on port $AGENT_T3_PORT:"
 	as_agent "$AGENT_BIN/t3" pair
 }
