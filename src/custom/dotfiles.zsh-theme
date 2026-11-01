@@ -1,11 +1,12 @@
 # Dotfiles prompt
 #
-#   14:02:07 ~/Developer/dotfiles ⌥ main +1 ~2 ?3 ↑1 · 1.4s · exit 1
-#   $
+#   ~/Developer/dotfiles ⌥ main +1 ~2 ?3 ↑1 · 1.4s · exit 1
+#   $                                                     14:02:07
 #
-# Line 1: time, user@host (SSH only), directory, git branch and status,
+# Line 1: user@host (SSH only), directory, git branch and status,
 #         how long the last command took and its exit code (if it failed)
-# Line 2: $ (# for root), green after success and red after failure
+# Line 2: $ (# for root), green after success and red after failure,
+#         and on the right the time the prompt was drawn
 #
 # Git status: +staged ~modified ?untracked !conflicts ↑ahead ↓behind
 # Uses only plain zsh, terminal colors and glyphs available in JetBrains Mono.
@@ -82,9 +83,6 @@ _dotfiles_precmd() {
 	local exit_code=$?
 	local parts=()
 
-	# Time the prompt was drawn, i.e. when the last command finished
-	parts+=("%F{8}%D{%H:%M:%S}%f")
-
 	# User and host only matter on remote machines
 	if [[ -n $SSH_CONNECTION ]]; then
 		parts+=("%F{yellow}%n@%m%f")
@@ -119,6 +117,8 @@ _dotfiles_precmd() {
 	fi
 
 	PROMPT="${spacer}${first_line}"$'\n'"%(?.%F{green}.%F{red})%(!.#.$)%f "
+	# Time the prompt was drawn, i.e. when the last command finished
+	RPROMPT="%F{8}%D{%H:%M:%S}%f"
 }
 
 # Clear the screen without the blank line on top
@@ -133,4 +133,3 @@ add-zsh-hook preexec _dotfiles_preexec
 add-zsh-hook precmd _dotfiles_precmd
 
 PROMPT2="%F{8}…%f "
-RPROMPT=""
