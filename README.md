@@ -241,7 +241,7 @@ Listed in `macos_defaults_list` in [`utils.sh`](utils.sh). `install` and `update
 
 ### Ghostty
 
-[`src/.config/ghostty/config.ghostty`](src/.config/ghostty/config.ghostty) is linked to `~/.config/ghostty/config.ghostty`, which Ghostty loads on startup. It sets JetBrains Mono as the font.
+[`src/.config/ghostty/config.ghostty`](src/.config/ghostty/config.ghostty) is linked to `~/.config/ghostty/config.ghostty`, which Ghostty loads on startup. It sets JetBrains Mono as the font and turns on `ssh-env`, so `ssh` sends `TERM=xterm-256color` instead of `xterm-ghostty` (remote hosts without Ghostty's terminfo then work).
 
 ### Homebrew
 
