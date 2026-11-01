@@ -77,6 +77,13 @@ sync_repo() {
 
 	link_files "$DOTFILES_ROOT/src" "$HOME" "Dotfiles"
 	link_files "$DOTFILES_ROOT/src/custom" "$HOME/.oh-my-zsh/custom" "ZSH files"
+
+	# Each folder in src/.config/ is linked into ~/.config/ (e.g. ghostty)
+	for config_dir in "$DOTFILES_ROOT"/src/.config/*/; do
+		[ -d "$config_dir" ] || continue
+		app_name=$(basename "$config_dir")
+		link_files "$config_dir" "$HOME/.config/$app_name" "$app_name config"
+	done
 }
 
 link_files() {
@@ -234,9 +241,6 @@ macos_defaults() {
 
 	# Set default folder for screenshots
 	defaults write com.apple.screencapture location "$HOME/Screenshots"
-
-	# Disable Google Chrome auto-update
-	defaults write com.google.Keystone.Agent checkInterval 0
 
 	# Sort folders on top in Finder
 	defaults write com.apple.finder _FXSortFoldersFirst -boolean TRUE

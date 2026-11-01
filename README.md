@@ -17,7 +17,7 @@ The script clones this repository into `~/.dotfiles` and runs `dotfiles install`
 
 1. Saves your Git name, email and signing key to `src/.gitconfig.user`
 2. Installs [Oh My Zsh](https://ohmyz.sh)
-3. Symlinks the files in `src/` into `~` and `src/custom/` into `~/.oh-my-zsh/custom`
+3. Symlinks the files in `src/` into `~`, `src/custom/` into `~/.oh-my-zsh/custom` and each `src/.config/<app>/` into `~/.config/<app>/`
 4. Creates `~/Screenshots` and `~/Developer`
 5. Applies [macOS defaults](#macos-defaults)
 6. Installs Homebrew and everything in the [`Brewfile`](Brewfile)
@@ -97,7 +97,10 @@ Set by `macos_defaults` in [`utils.sh`](utils.sh):
 - Dock appears instantly when hidden and animates faster
 - Screenshots saved to `~/Screenshots`
 - Folders listed first in Finder and on the desktop
-- Google Chrome auto-update turned off
+
+### Ghostty
+
+[`src/.config/ghostty/config.ghostty`](src/.config/ghostty/config.ghostty) is linked to `~/.config/ghostty/config.ghostty`, which Ghostty loads on startup. It sets JetBrains Mono as the font.
 
 ### Homebrew
 
@@ -112,7 +115,7 @@ These files are ignored by Git, so personal settings and secrets stay out of the
 | `~/.dotfiles/.zshrc.user.sh` | Your own shell config, loaded by `.zshrc` |
 | `~/.dotfiles/src/.gitconfig.user` | Git name, email and signing key, linked to `~/.gitconfig.user` |
 
-To add a dotfile, put it in `src/` (or `src/custom/` for Zsh files) and run `dotfiles link`.
+To add a dotfile, put it in `src/`, `src/custom/` for Zsh files or `src/.config/<app>/` for apps that read `~/.config`, then run `dotfiles link`.
 
 ## Repository layout
 
@@ -122,6 +125,7 @@ install.sh          Bootstrap script used by the curl one-liner
 utils.sh            Shared helpers: linking, prompts, macOS defaults, GPG setup
 src/                Files linked into ~
 src/custom/         Files linked into ~/.oh-my-zsh/custom
+src/.config/<app>/  Files linked into ~/.config/<app>/ (Ghostty)
 *.sh                Snippets sourced by .zshrc (Homebrew, Oh My Zsh, GPG)
 Brewfile            Homebrew packages
 gpg-agent.conf      Linked to ~/.gnupg/gpg-agent.conf

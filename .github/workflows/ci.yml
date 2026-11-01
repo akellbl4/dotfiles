@@ -29,4 +29,5 @@ jobs:
             test -L "$HOME/$f" || { echo "$f is not linked"; exit 1; }
           done
           test -L "$HOME/.oh-my-zsh/custom/aliases.zsh"
+          test -L "$HOME/.config/ghostty/config.ghostty"
           test "$(git config --global core.excludesfile)" = "~/.gitignore_global"

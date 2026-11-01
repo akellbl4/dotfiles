@@ -14,18 +14,13 @@ brew "gnupg"
 # Quicklook plugins
 cask "qlmarkdown"                                       # Markdown https://github.com/sbarex/QLMarkdown
 cask "qlvideo"                                          # Video https://github.com/Marginal/QLVideo
-cask "quicklook-json", args: { require_sha: false }     # JSON https://github.com/smittytone/PreviewJson
 cask "syntax-highlight"                                 # Code Syntax Highlight https://github.com/sbarex/SourceCodeSyntaxHighlight
 
 # Applications
 cask "raycast"
-cask "google-chrome"
-cask "little-snitch"
-cask "firefox"
 cask "ghostty"
-cask "arc"
-cask "visual-studio-code"
-cask "spotify"
+cask "ungoogled-chromium"
+cask "spotify", args: { require_sha: false }
 cask "figma"
 cask "protonvpn"
 cask "hiddenbar"

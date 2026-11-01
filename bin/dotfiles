@@ -69,16 +69,21 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		if command -v brew >/dev/null 2>&1; then
 			log "info" "Updating Homebrew"
 			brew update
-			brew bundle --file="$DOTFILES_ROOT/Brewfile" --quiet --upgrade
+			if brew bundle --file="$DOTFILES_ROOT/Brewfile" --quiet --upgrade; then
+				log "success" "Homebrew updated with all packages"
+			else
+				log "error" "Some Homebrew packages failed to install, see above. Fix the Brewfile and run 'dotfiles bundle'."
+			fi
 			brew cleanup
-			log "success" "Homebrew updated with all packages"
 		else
 			log "info" "Installing Homebrew"
 			if ! /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || ! load_brew; then
 				log "error" "Homebrew installation failed"
 			else
 				log "success" "Homebrew installed"
-				brew bundle --file="$DOTFILES_ROOT/Brewfile" --quiet
+				if ! brew bundle --file="$DOTFILES_ROOT/Brewfile" --quiet; then
+					log "error" "Some Homebrew packages failed to install, see above. Fix the Brewfile and run 'dotfiles bundle'."
+				fi
 			fi
 		fi
 	fi
