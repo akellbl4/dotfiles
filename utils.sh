@@ -518,6 +518,7 @@ linux_family() {
 		echo "unknown"
 		return 0
 	fi
+	# shellcheck source=/dev/null # os-release is a system file, its path is only known at run time
 	os_ids=$(unset ID ID_LIKE; . "$os_release"; echo "$ID $ID_LIKE")
 	case " $os_ids " in
 		*" fedora "*)
