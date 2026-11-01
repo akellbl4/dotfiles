@@ -18,7 +18,7 @@ The script clones this repository into `~/.dotfiles` (or updates it if it is alr
 1. On Linux, installs zsh, git, curl and unzip if missing and offers to make zsh your default shell. On Bazzite and Silverblue, missing packages are added with `rpm-ostree`, so reboot and run the installer again.
 2. Saves your Git name and email to `src/.gitconfig.user`
 3. Installs [Oh My Zsh](https://ohmyz.sh)
-4. Symlinks the files in `src/` into `~`, `src/custom/` into `~/.oh-my-zsh/custom` each `src/.config/<app>/` into `~/.config/<app>/`, and each [agent skill](#agent-skills) in `skills/` into `~/.claude/skills/` and `~/.codex/skills/`
+4. Symlinks the files in `src/` into `~`, `src/custom/` into `~/.oh-my-zsh/custom`, each `src/.config/<app>/` into `~/.config/<app>/`, and each [agent skill](#agent-skills) in `skills/` into `~/.agents/skills/` and `~/.claude/skills/`
 5. On macOS, creates `~/Screenshots` and `~/Developer` if they're missing and gives Screenshots a camera icon, applies [macOS defaults](#macos-defaults), and installs Homebrew and everything in the [`Brewfile`](Brewfile)
 6. Installs the latest [Node LTS, pnpm and Bun](#node-pnpm-and-bun), and moves to a newer LTS on later runs
 7. Installs the [AI coding tools](#ai-coding-tools) on Linux (on macOS they come from the `Brewfile`)
@@ -143,7 +143,14 @@ fnm and Bun come from Homebrew on macOS and from their official installers on Li
 
 ### Agent skills
 
-`skills/` holds skills for Claude Code and Codex, adapted from [tstack](https://github.com/t3dotgg/tstack) (MIT, [`skills/LICENSE`](skills/LICENSE)). Each skill folder is symlinked into `~/.claude/skills/` and `~/.codex/skills/`, so edits here apply right away. A real folder with the same name is moved to `~/.claude/skills.bak/` (or `~/.codex/skills.bak/`) first.
+`skills/` holds the skills for every AI coding tool, adapted from [tstack](https://github.com/t3dotgg/tstack) (MIT, [`skills/LICENSE`](skills/LICENSE)). Each skill folder is symlinked into two places, so edits here apply right away:
+
+| Folder | Read by |
+| --- | --- |
+| `~/.agents/skills/` | Codex, Cursor, Gemini CLI, GitHub Copilot, OpenCode (the shared location) |
+| `~/.claude/skills/` | Claude Code (also read by Cursor and OpenCode) |
+
+Tool-specific folders such as `~/.codex/skills/` or `~/.cursor/skills/` are left alone, because tools that read several of them would load each skill twice. A real folder with the same name as a skill is moved to `~/.agents/skills.bak/` or `~/.claude/skills.bak/` first.
 
 | Skill | Say | What it does |
 | --- | --- | --- |
@@ -225,7 +232,7 @@ utils.sh            Shared helpers: linking, prompts, macOS defaults, GPG setup
 src/                Files linked into ~
 src/custom/         Files linked into ~/.oh-my-zsh/custom
 src/.config/<app>/  Files linked into ~/.config/<app>/ (Ghostty)
-skills/<name>/      Agent skills linked into ~/.claude/skills/ and ~/.codex/skills/
+skills/<name>/      Agent skills linked into ~/.agents/skills/ and ~/.claude/skills/
 *.sh                Snippets sourced by .zshrc (Homebrew, Oh My Zsh, Node, GPG)
 Brewfile            Homebrew packages
 gpg-agent.conf      Linked to ~/.gnupg/gpg-agent.conf

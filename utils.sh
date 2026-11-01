@@ -88,8 +88,12 @@ link_all() {
 		link_files "$config_dir" "$HOME/.config/$app_name" "$app_name config"
 	done
 
+	# ~/.agents/skills is the shared location read by Codex, Cursor, Gemini CLI,
+	# GitHub Copilot and OpenCode. Claude Code only reads ~/.claude/skills.
+	# Other tool folders (~/.codex, ~/.cursor, ~/.gemini...) are left out on
+	# purpose: tools that read several of them would load each skill twice.
+	link_skills "$HOME/.agents/skills" "Agent skills"
 	link_skills "$HOME/.claude/skills" "Claude Code skills"
-	link_skills "$HOME/.codex/skills" "Codex skills"
 }
 
 # Link each folder in skills/ into an agent's skills folder as a whole-folder
