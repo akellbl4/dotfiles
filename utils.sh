@@ -918,3 +918,43 @@ macos_defaults() {
 	done
 	log "success" "macOS defaults updated"
 }
+
+# Tart image name for the newest macOS this Mac can run as a guest (guests can't be newer than the host)
+macos_vm_image() {
+	case "$(sw_vers -productVersion | cut -d. -f1)" in
+		14) echo "macos-sonoma-base" ;;
+		15) echo "macos-sequoia-base" ;;
+		*) echo "macos-tahoe-base" ;;
+	esac
+}
+
+# Install Tart and create a macOS VM from a prebuilt Cirrus Labs image (login admin/admin)
+setup_macos_vm() {
+	vm_name=${1:-macos}
+	if [ "$(uname)" != "Darwin" ] || [ "$(uname -m)" != "arm64" ]; then
+		log "error" "macOS VMs need macOS on Apple Silicon."
+		return 1
+	fi
+	if ! command -v tart >/dev/null 2>&1; then
+		if ! load_brew; then
+			log "error" "Homebrew is required to install Tart."
+			return 1
+		fi
+		log "info" "Installing Tart..."
+		brew install cirruslabs/cli/tart || return 1
+	else
+		log "info" "Tart already installed ($(tart --version))"
+	fi
+
+	if tart list --format json 2>/dev/null | grep -q "\"Name\" *: *\"$vm_name\""; then
+		log "info" "VM '$vm_name' already exists"
+	else
+		vm_image="ghcr.io/cirruslabs/$(macos_vm_image):latest"
+		log "info" "Creating VM '$vm_name' from $vm_image (a download of about 25 GB)..."
+		tart clone "$vm_image" "$vm_name" || return 1
+		log "success" "VM '$vm_name' created"
+	fi
+
+	log "" "Start it with ${BOLD}tart run $vm_name${RESET} (add --no-graphics to run headless)" 1
+	log "" "SSH in with ${BOLD}ssh admin@\$(tart ip $vm_name)${RESET}, password admin" 1
+}

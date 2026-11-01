@@ -45,6 +45,7 @@ The `dotfiles` command is on your `PATH` after install.
 | `dotfiles ai-tools` | Installs Claude Code and Codex, plus Cursor and T3 Code on machines with a desktop |
 | `dotfiles node` | Installs the latest Node LTS, pnpm and Bun |
 | `dotfiles podman` | Installs Podman and makes the `docker` command use it |
+| `dotfiles macos-vm [name]` | Installs Tart and creates a macOS virtual machine (Apple Silicon only) |
 | `dotfiles gpg-key` | Picks an existing GPG key or creates a new one for signing commits |
 | `dotfiles help` | Shows usage |
 
@@ -145,6 +146,17 @@ fnm and Bun come from Homebrew on macOS and from their official installers on Li
 | Bazzite, Silverblue | Already included; if missing, added with `rpm-ostree` (reboot, then run `dotfiles podman` again) |
 
 It then links `~/.local/bin/docker` to `podman`, so `docker` commands and scripts run Podman. If a real Docker is already installed, it is left alone and nothing is linked.
+
+### macOS virtual machine
+
+`dotfiles macos-vm [name]` is not part of `install`. It installs [Tart](https://tart.run) with Homebrew, which runs VMs on Apple's built-in Virtualization framework, and clones a prebuilt [Cirrus Labs image](https://github.com/cirruslabs/macos-image-templates) into a VM called `macos` (or the name you give). It picks the newest macOS the host can run, since a guest can't be newer than the host. The image is a download of about 25 GB. If the VM already exists, it is left alone.
+
+```sh
+tart run macos                  # add --no-graphics to run headless
+ssh admin@$(tart ip macos)      # password: admin
+```
+
+macOS allows at most two macOS VMs running at once on one Mac.
 
 ### macOS defaults
 
