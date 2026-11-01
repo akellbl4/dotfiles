@@ -149,7 +149,7 @@ It then links `~/.local/bin/docker` to `podman`, so `docker` commands and script
 
 ### macOS virtual machine
 
-`dotfiles macos-vm [name]` is not part of `install`. It installs [Tart](https://tart.run) with Homebrew, which runs VMs on Apple's built-in Virtualization framework, and clones a prebuilt [Cirrus Labs image](https://github.com/cirruslabs/macos-image-templates) into a VM called `macos` (or the name you give). It picks the newest macOS the host can run, since a guest can't be newer than the host. The image is a download of about 25 GB. If the VM already exists, it is left alone.
+`dotfiles macos-vm [name]` is not part of `install`. It installs [Tart](https://tart.run) from its latest [GitHub release](https://github.com/openai/tart/releases) into `~/.local/share/tart`, with a `tart` launcher in `~/.local/bin`, after checking the download against its published checksum. Tart runs VMs on Apple's built-in Virtualization framework. The command then clones a prebuilt [Cirrus Labs image](https://github.com/cirruslabs/macos-image-templates) into a VM called `macos` (or the name you give). It picks the newest macOS the host can run, since a guest can't be newer than the host. The image is a download of about 25 GB. If the VM already exists, it is left alone.
 
 ```sh
 tart run macos                  # add --no-graphics to run headless

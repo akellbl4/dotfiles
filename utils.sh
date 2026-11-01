@@ -919,6 +919,9 @@ macos_defaults() {
 	log "success" "macOS defaults updated"
 }
 
+TART_REPO="openai/tart"
+TART_HOME="$HOME/.local/share/tart"
+
 # Tart image name for the newest macOS this Mac can run as a guest (guests can't be newer than the host)
 macos_vm_image() {
 	case "$(sw_vers -productVersion | cut -d. -f1)" in
@@ -928,6 +931,39 @@ macos_vm_image() {
 	esac
 }
 
+# Install Tart from its latest GitHub release into ~/.local/share/tart, with a
+# ~/.local/bin/tart launcher. (The cirruslabs/cli Homebrew tap is no longer updated
+# since Tart moved to openai/tart, and current Homebrew refuses its formula.)
+install_tart() {
+	log "info" "Installing Tart..."
+	tart_url=$(github_release_asset "$TART_REPO" '/tart\.tar\.gz$')
+	tart_sums_url=$(github_release_asset "$TART_REPO" '_checksums\.txt$')
+	if [ -z "$tart_url" ] || [ -z "$tart_sums_url" ]; then
+		log "error" "Couldn't find the latest Tart release on GitHub."
+		return 1
+	fi
+	tart_tmp=$(mktemp -d)
+	if ! download "$tart_url" "$tart_tmp/tart.tar.gz" || ! download "$tart_sums_url" "$tart_tmp/checksums.txt"; then
+		rm -rf "$tart_tmp"
+		log "error" "Tart download failed."
+		return 1
+	fi
+	if ! (cd "$tart_tmp" && grep ' tart\.tar\.gz$' checksums.txt | shasum -a 256 -c - >/dev/null); then
+		rm -rf "$tart_tmp"
+		log "error" "Tart download doesn't match its checksum."
+		return 1
+	fi
+	mkdir -p "$tart_tmp/tart" "$HOME/.local/bin" "$HOME/.local/share"
+	tar xzf "$tart_tmp/tart.tar.gz" -C "$tart_tmp/tart" || { rm -rf "$tart_tmp"; return 1; }
+	rm -rf "$TART_HOME"
+	mv "$tart_tmp/tart" "$TART_HOME"
+	rm -rf "$tart_tmp"
+	# A launcher script, not a symlink, so the binary runs from inside its app bundle
+	printf '#!/bin/sh\nexec "%s/tart.app/Contents/MacOS/tart" "$@"\n' "$TART_HOME" > "$HOME/.local/bin/tart"
+	chmod +x "$HOME/.local/bin/tart"
+	log "success" "Tart installed ($("$HOME/.local/bin/tart" --version))"
+}
+
 # Install Tart and create a macOS VM from a prebuilt Cirrus Labs image (login admin/admin)
 setup_macos_vm() {
 	vm_name=${1:-macos}
@@ -935,16 +971,12 @@ setup_macos_vm() {
 		log "error" "macOS VMs need macOS on Apple Silicon."
 		return 1
 	fi
-	if ! command -v tart >/dev/null 2>&1; then
-		if ! load_brew; then
-			log "error" "Homebrew is required to install Tart."
-			return 1
-		fi
-		log "info" "Installing Tart..."
-		brew install cirruslabs/cli/tart || return 1
+	if has_command tart; then
+		log "info" "Tart already installed ($(PATH="$HOME/.local/bin:$PATH" tart --version))"
 	else
-		log "info" "Tart already installed ($(tart --version))"
+		install_tart || return 1
 	fi
+	PATH="$HOME/.local/bin:$PATH"
 
 	if tart list --format json 2>/dev/null | grep -q "\"Name\" *: *\"$vm_name\""; then
 		log "info" "VM '$vm_name' already exists"
