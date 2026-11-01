@@ -160,7 +160,7 @@ What it sets up (running it again updates everything in place):
    - [`agent/credential-helper`](agent/credential-helper), which gives git the same tokens for `https://github.com`
    - a `t3` command that runs T3 Code's bundled server with the agent's own data in `/Users/agent/.t3`
 4. Configures the agent's git: your name and email, no commit signing, only the token credential helper, and `git@github.com:` and `ssh://git@github.com/` remotes rewritten to HTTPS
-5. Installs the `/Library/LaunchDaemons/dotfiles.t3-agent.plist` LaunchDaemon, which runs `t3 serve` as `agent` on `http://127.0.0.1:3780` from boot. Logs go to `/Users/agent/Library/Logs/t3-server.log`.
+5. Installs the `/Library/LaunchDaemons/dotfiles.t3-agent.plist` LaunchDaemon, which runs `t3 serve --lan` as `agent` on port 3780 from boot, so devices on your local network and tailnet can pair with it (connections need a pairing token from `dotfiles agent-pair`). Logs go to `/Users/agent/Library/Logs/t3-server.log`.
 
 Then:
 
