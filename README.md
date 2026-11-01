@@ -28,6 +28,7 @@ Run `dotfiles [command]` to execute a specific command.
 - **link**: Links the dotfiles to your home directory, ensuring all configurations are properly applied.
 - **bundle**: Installs all Homebrew packages listed in the Brewfile.
 - **config-user**: Prompts for Git user settings (full name, email, signing key) and saves them to `src/.gitconfig.user`.
+- **gpg-key**: Creates a GPG signing key (ed25519, expires in 2 years), configures Git to sign commits with it, and optionally adds it to GitHub via `gh`.
 - **help**: Displays usage information for the dotfiles command.
 
 ## Customization

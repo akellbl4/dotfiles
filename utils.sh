@@ -128,6 +128,80 @@ configure_git_user() {
 	log "info" "Git user settings configured."
 }
 
+# Offer to create a GPG signing key and configure Git to use it
+setup_gpg_key() {
+	user_config="$DOTFILES_ROOT/src/.gitconfig.user"
+
+	load_brew || true
+	if ! command -v gpg >/dev/null 2>&1; then
+		log "error" "gpg not found, skipping key setup. Run 'dotfiles bundle' to install gnupg."
+		return 0
+	fi
+
+	existing_key=$(git config -f "$user_config" user.signingkey 2>/dev/null || true)
+	if [ -n "$existing_key" ]; then
+		log "info" "Git signing key already configured ($existing_key)"
+		return 0
+	fi
+
+	if [ -n "$(gpg --list-secret-keys --with-colons 2>/dev/null)" ]; then
+		log "info" "Existing GPG keys:"
+		gpg --list-secret-keys --keyid-format long 2>/dev/null | sed 's/^/  /'
+		log "info" "To use one of them, run 'dotfiles config-user' and enter its key ID."
+	fi
+
+	if [ "$(ask "No Git signing key configured. Create a new GPG key?")" != "y" ]; then
+		return 0
+	fi
+
+	key_name=$(git config -f "$user_config" user.name 2>/dev/null || true)
+	key_email=$(git config -f "$user_config" user.email 2>/dev/null || true)
+	if [ -z "$key_name" ]; then
+		printf "Name for the key: " >&2
+		read -r key_name || key_name=""
+	fi
+	if [ -z "$key_email" ]; then
+		printf "Email for the key (should match your GitHub email): " >&2
+		read -r key_email || key_email=""
+	fi
+	if [ -z "$key_name" ] || [ -z "$key_email" ]; then
+		log "error" "Name and email are required to create a key, skipping."
+		return 0
+	fi
+
+	# pinentry needs to know which terminal to ask for the passphrase on
+	GPG_TTY=$(tty) || true
+	export GPG_TTY
+
+	log "info" "Creating GPG key for $key_name <$key_email> (you will be asked for a passphrase)..."
+	key_fpr=$(gpg --status-fd 1 --quick-generate-key "$key_name <$key_email>" ed25519 sign 2y \
+		| awk '/KEY_CREATED/ {print $NF}')
+	if [ -z "$key_fpr" ]; then
+		log "error" "GPG key creation failed"
+		return 0
+	fi
+	log "success" "GPG key created: $key_fpr"
+
+	git config -f "$user_config" user.name "$key_name"
+	git config -f "$user_config" user.email "$key_email"
+	git config -f "$user_config" user.signingkey "$key_fpr"
+	git config -f "$user_config" commit.gpgsign true
+	ln -sf "$user_config" "$HOME/.gitconfig.user"
+	log "success" "Git configured to sign commits with $key_fpr"
+
+	if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1 \
+		&& [ "$(ask "Add the public key to your GitHub account?")" = "y" ]; then
+		if gpg --armor --export "$key_fpr" | gh gpg-key add -; then
+			log "success" "Public key added to GitHub"
+			return 0
+		fi
+		log "error" "Upload failed. You may need: gh auth refresh -s write:gpg_key"
+	fi
+
+	log "info" "Add this public key at https://github.com/settings/gpg/new:"
+	gpg --armor --export "$key_fpr"
+}
+
 user_folders() {
 	log "info" "Creating user folders..."
 	for folder in Screenshots Developer; do

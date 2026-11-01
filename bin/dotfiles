@@ -102,6 +102,10 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 			ln -sfv "$DOTFILES_ROOT/gpg-agent.conf" "$HOME/.gnupg/gpg-agent.conf"
 			log "success" "gpg-agent.conf linked successfully."
 		fi
+		# Key creation needs a passphrase, so it is skipped in non-interactive (-y) mode
+		if [ "$2" != "-y" ]; then
+			setup_gpg_key
+		fi
 	fi
 
 	if [ "$COMMAND" = "install" ]; then
@@ -134,9 +138,13 @@ if [ "$COMMAND" = "config-user" ]; then
 	log "success" "Git user settings updated."
 fi
 
+if [ "$COMMAND" = "gpg-key" ]; then
+	setup_gpg_key
+fi
+
 if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
 	log "" "${BOLD}Usage${RESET}"
-	log "" "dotfiles [install|link|bundle|update|config-user|help]" 1
+	log "" "dotfiles [install|link|bundle|update|config-user|gpg-key|help]" 1
 
 	log "" "\n${BOLD}Commands${RESET}"
 	log "" "${BOLD}install${RESET}      📥 Installs the dotfiles, sets up Oh My Zsh, Homebrew, and applies macOS defaults." 2
@@ -144,6 +152,7 @@ if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
 	log "" "${BOLD}link${RESET}         🔗 Links the dotfiles to your home directory, ensuring all configurations are properly applied." 2
 	log "" "${BOLD}bundle${RESET}       🍺 Installs all Homebrew packages listed in the Brewfile." 2
 	log "" "${BOLD}config-user${RESET}  🛠️ Configures Git user settings including name, email, and signing key." 2
+	log "" "${BOLD}gpg-key${RESET}      🔑 Creates a GPG signing key and configures Git to sign commits with it." 2
 	log "" "${BOLD}help${RESET}         ❓ Displays usage information for the dotfiles command." 2
 
 	log "success" "\nEnjoy managing your development environment with Dotfiles!\n"
