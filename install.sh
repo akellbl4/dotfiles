@@ -3,6 +3,8 @@
 #
 #   curl -L https://github.com/akellbl4/dotfiles/raw/main/install.sh | bash
 #   sh ~/.dotfiles/install.sh [install|update] [-y]   (what `dotfiles install|update` runs)
+#
+# Extra options (--pulled, --restarted) are passed through to bin/dotfiles.
 
 set -e
 
@@ -10,7 +12,16 @@ DOTFILES_ROOT="$HOME/.dotfiles"
 DOTFILES_REPO="https://github.com/akellbl4/dotfiles.git"
 
 COMMAND=${1:-install}
-FLAGS=$2
+[ $# -gt 0 ] && shift
+
+assume_yes=""
+already_pulled=""
+for arg in "$@"; do
+	case "$arg" in
+		-y) assume_yes=1 ;;
+		--pulled) already_pulled=1 ;;
+	esac
+done
 
 # git is needed to download the dotfiles; install it on Linux if missing
 if ! command -v git >/dev/null 2>&1; then
@@ -28,7 +39,7 @@ fi
 if [ ! -d "$DOTFILES_ROOT/.git" ]; then
 	printf "\033[34mCloning dotfiles into %s...\033[0m\n" "$DOTFILES_ROOT"
 	git clone "$DOTFILES_REPO" "$DOTFILES_ROOT"
-elif [ -z "$DOTFILES_PULLED" ]; then
+elif [ -z "$already_pulled" ]; then
 	# Already installed: update first so the latest version of the scripts runs
 	printf "\033[34mUpdating dotfiles in %s...\033[0m\n" "$DOTFILES_ROOT"
 	if ! git -C "$DOTFILES_ROOT" pull --ff-only origin main; then
@@ -36,16 +47,14 @@ elif [ -z "$DOTFILES_PULLED" ]; then
 	fi
 fi
 
-# The repo is up to date, so bin/dotfiles doesn't need to pull again
-DOTFILES_PULLED=1
-export DOTFILES_PULLED
 
 chmod +x "$DOTFILES_ROOT/bin/dotfiles"
 
 # When piped from curl, stdin is the script itself, so prompts must read from the terminal.
 # Without a terminal, or with -y, run non-interactively.
-if [ "$FLAGS" != "-y" ] && [ -r /dev/tty ] && (: < /dev/tty) 2>/dev/null; then
-	exec sh "$DOTFILES_ROOT/bin/dotfiles" "$COMMAND" < /dev/tty
+# The repo is up to date now, so tell bin/dotfiles not to pull again
+if [ -z "$assume_yes" ] && [ -r /dev/tty ] && (: < /dev/tty) 2>/dev/null; then
+	exec sh "$DOTFILES_ROOT/bin/dotfiles" "$COMMAND" "$@" --pulled < /dev/tty
 else
-	exec sh "$DOTFILES_ROOT/bin/dotfiles" "$COMMAND" -y
+	exec sh "$DOTFILES_ROOT/bin/dotfiles" "$COMMAND" "$@" --pulled -y
 fi

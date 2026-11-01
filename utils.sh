@@ -68,7 +68,7 @@ pull_repo() {
 			log "error" "Could not update $DOTFILES_ROOT, see the git error above. If you have local changes, commit or stash them and retry."
 			return 1
 		fi
-		log "success" "Dotfiles updated"
+		log "success" "Pulled the latest dotfiles"
 	else
 		log "info" "Installing dotfiles..."
 		git clone https://github.com/akellbl4/dotfiles.git "$DOTFILES_ROOT"

@@ -48,6 +48,8 @@ The `dotfiles` command is on your `PATH` after install.
 | `dotfiles gpg-key` | Picks an existing GPG key or creates a new one for signing commits |
 | `dotfiles help` | Shows usage |
 
+`dotfiles` is also a small zsh function ([`src/custom/functions.zsh`](src/custom/functions.zsh)): after `install`, `update` and `link` it reloads `~/.zshrc` in your current shell, so changes apply right away without opening a new one.
+
 Updates only fast-forward. If `~/.dotfiles` has commits that aren't on `main`, the update stops so you can sort them out by hand.
 
 ## What's included

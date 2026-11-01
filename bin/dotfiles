@@ -17,23 +17,42 @@ fi
 COMMAND=$1
 CURRENT_DIR=$(pwd)
 
+# Options: -y answers yes to everything. --source means the dotfiles shell function
+# called us and will reload ~/.zshrc itself. --pulled and --restarted are passed by
+# install.sh and the restart below (as arguments, not environment variables, so
+# they can't leak into shells started from here and make a later update skip pulling).
+assume_yes=""
+source_after=""
+already_pulled=""
+restarted=""
+for arg in "$@"; do
+	case "$arg" in
+		-y) assume_yes=1 ;;
+		--source) source_after=1 ;;
+		--pulled) already_pulled=1 ;;
+		--restarted) restarted=1 ;;
+	esac
+done
+# Older versions passed these as environment variables; never let them through
+unset DOTFILES_PULLED DOTFILES_RESTARTED
+
 # Print the title at the start of any command (once, not again after restarting below)
-if [ -z "$DOTFILES_RESTARTED" ]; then
+if [ -z "$restarted" ]; then
 	printf "\n%b⚙️  Dotfiles%b\n\n" "$BOLD" "$RESET"
 fi
 
 if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 	# Pull first, then hand over to the freshly pulled install.sh, so install and
 	# update always run the latest scripts (the same path as the curl installer)
-	if [ -z "$DOTFILES_PULLED" ]; then
+	if [ -z "$already_pulled" ]; then
 		pull_repo || log "error" "Continuing with the current version."
-		DOTFILES_PULLED=1 DOTFILES_RESTARTED=1 exec sh "$DOTFILES_ROOT/install.sh" "$@"
+		exec sh "$DOTFILES_ROOT/install.sh" "$@" --pulled --restarted
 	fi
 
 	missing_folders=$(missing_user_folders | tr '\n' ' ')
 	current_git_user=$(git_user_summary)
 
-	if [ "$2" = "-y" ]; then
+	if [ -n "$assume_yes" ]; then
 		create_user_folders=y
 		update_macos_defaults=y
 		setup_git_user=n
@@ -165,7 +184,7 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 			log "success" "gpg-agent.conf linked successfully."
 		fi
 		# Choosing or creating a key needs input, so it is skipped in non-interactive (-y) mode
-		if [ "$2" != "-y" ]; then
+		if [ -z "$assume_yes" ]; then
 			setup_gpg_key
 		fi
 	fi
@@ -178,14 +197,22 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 	fi
 
 	cd "$CURRENT_DIR" || exit
-	exec zsh -l
+	# Called through the dotfiles shell function: it reloads ~/.zshrc in the current
+	# shell. Otherwise (curl installer, first install) start a fresh zsh with the new setup.
+	if [ -z "$source_after" ]; then
+		exec zsh -l
+	fi
 fi
 
 if [ "$COMMAND" = "link" ]; then
 	log "info" "Linking dotfiles..."
 	sync_repo
 	cd "$CURRENT_DIR" || exit
-	log "success" "Dotfiles linked. Run 'reload' or open a new shell to apply."
+	if [ -n "$source_after" ]; then
+		log "success" "Dotfiles linked"
+	else
+		log "success" "Dotfiles linked. Run 'reload' or open a new shell to apply."
+	fi
 fi
 
 if [ "$COMMAND" = "bundle" ]; then
