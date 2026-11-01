@@ -155,7 +155,7 @@ Tool-specific folders such as `~/.codex/skills/` or `~/.cursor/skills/` are left
 | `full-send` | "full send" | Takes a change all the way to a merged PR unattended: proves it, reviews it, files it, babysits it, merges it |
 | `full-push` | "full push" | Same as `full-send`, but stops when the PR is ready for you to merge |
 | `council` | "council" | Gets review from three models from different providers and loops until they agree |
-| `sol-loop` | "sol loop" | Reviews a change with GPT Sol in a loop until both agents agree |
+| `review-loop` | "review loop" | Reviews a change with GPT Sol in a loop until both agents agree |
 | `file-pr` | "file a PR" | Files a short PR that leads with the problem, not an inventory of changes |
 | `takeover` | "take over" | Finishes someone else's PR, branch or agent thread and keeps their credit |
 | `babysit-pr` | "babysit" | Watches a PR through CI and review bots and fixes the real findings |
