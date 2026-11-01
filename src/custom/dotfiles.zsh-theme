@@ -1,11 +1,11 @@
 # Dotfiles prompt
 #
-#   ~/Developer/dotfiles ⌥ main +1 ~2 ?3 ↑1 · 4s · exit 1
-#   ❯
+#   14:02:07 ~/Developer/dotfiles ⌥ main +1 ~2 ?3 ↑1 · 1.4s · exit 1
+#   $
 #
-# Line 1: user@host (SSH only), directory, git branch and status,
-#         duration of the last command (if 2s or more) and its exit code (if it failed)
-# Line 2: prompt character, green after success and red after failure
+# Line 1: time, user@host (SSH only), directory, git branch and status,
+#         how long the last command took and its exit code (if it failed)
+# Line 2: $ (# for root), green after success and red after failure
 #
 # Git status: +staged ~modified ?untracked !conflicts ↑ahead ↓behind
 # Uses only plain zsh, terminal colors and glyphs available in JetBrains Mono.
@@ -16,10 +16,16 @@ autoload -Uz add-zsh-hook
 typeset -g _dotfiles_cmd_start=""
 typeset -g _dotfiles_first_prompt=1
 
-# Format seconds as 4s, 1m 5s or 2h 3m
+# Format milliseconds as 85ms, 1.4s, 42s, 1m 5s or 2h 3m
 _dotfiles_format_duration() {
-	local total=$1
-	if (( total >= 3600 )); then
+	local ms=$1
+	local total=$(( ms / 1000 ))
+	local LC_NUMERIC=C  # always 1.4s, never 1,4s
+	if (( ms < 1000 )); then
+		print -n "${ms}ms"
+	elif (( ms < 10000 )); then
+		printf "%.1fs" $(( ms / 1000.0 ))
+	elif (( total >= 3600 )); then
 		print -n "$(( total / 3600 ))h $(( total % 3600 / 60 ))m"
 	elif (( total >= 60 )); then
 		print -n "$(( total / 60 ))m $(( total % 60 ))s"
@@ -76,6 +82,9 @@ _dotfiles_precmd() {
 	local exit_code=$?
 	local parts=()
 
+	# Time the prompt was drawn, i.e. when the last command finished
+	parts+=("%F{8}%D{%H:%M:%S}%f")
+
 	# User and host only matter on remote machines
 	if [[ -n $SSH_CONNECTION ]]; then
 		parts+=("%F{yellow}%n@%m%f")
@@ -90,8 +99,8 @@ _dotfiles_precmd() {
 
 	local extras=()
 	if [[ -n $_dotfiles_cmd_start ]]; then
-		local -i elapsed=$(( EPOCHREALTIME - _dotfiles_cmd_start ))
-		(( elapsed >= 2 )) && extras+=("%F{yellow}$(_dotfiles_format_duration $elapsed)%f")
+		local -i elapsed_ms=$(( (EPOCHREALTIME - _dotfiles_cmd_start) * 1000 ))
+		extras+=("%F{yellow}$(_dotfiles_format_duration $elapsed_ms)%f")
 		(( exit_code != 0 )) && extras+=("%F{red}exit ${exit_code}%f")
 	fi
 	_dotfiles_cmd_start=""
@@ -109,7 +118,7 @@ _dotfiles_precmd() {
 		_dotfiles_first_prompt=0
 	fi
 
-	PROMPT="${spacer}${first_line}"$'\n'"%(?.%F{green}.%F{red})%(!.#.❯)%f "
+	PROMPT="${spacer}${first_line}"$'\n'"%(?.%F{green}.%F{red})%(!.#.$)%f "
 }
 
 # Clear the screen without the blank line on top

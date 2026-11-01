@@ -56,11 +56,11 @@ Updates only fast-forward. If `~/.dotfiles` has commits that aren't on `main`, t
 - A custom two-line prompt, [`src/custom/dotfiles.zsh-theme`](src/custom/dotfiles.zsh-theme):
 
 ```
-~/Developer/dotfiles ⌥ main +1 ~2 ?3 ↑1 · 4s · exit 1
-❯
+14:02:07 ~/Developer/dotfiles ⌥ main +1 ~2 ?3 ↑1 · 1.4s · exit 1
+$
 ```
 
-  It shows the directory, the Git branch, and counts of staged (`+`), modified (`~`), untracked (`?`) and conflicted (`!`) files and of commits ahead (`↑`) and behind (`↓`). It also shows how long the last command took when that was 2 seconds or more, and its exit code if it failed. `❯` turns red after a failed command, and `user@host` appears over SSH. It uses only your terminal's colors and characters that JetBrains Mono has, so it needs no extra tools or Nerd Font.
+  It shows the time, the directory, the Git branch, and counts of staged (`+`), modified (`~`), untracked (`?`) and conflicted (`!`) files and of commits ahead (`↑`) and behind (`↓`). After every command it shows how long it took (`85ms`, `1.4s`, `1m 5s`) and its exit code if it failed. `$` turns red after a failed command (`#` when running as root), and `user@host` appears over SSH. It uses only your terminal's colors and characters that JetBrains Mono has, so it needs no extra tools or Nerd Font.
 - [`src/custom/aliases.zsh`](src/custom/aliases.zsh):
 
 | Alias | Action |
