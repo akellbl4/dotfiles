@@ -212,6 +212,18 @@ use_signing_key() {
 	ln -sf "$user_config" "$HOME/.gitconfig.user"
 }
 
+# Device of the terminal this script runs in, e.g. /dev/ttys003 or /dev/pts/0.
+# `tty` prints just /dev/tty when stdin is redirected from it (as install.sh does),
+# and gpg-agent can't open that for the passphrase prompt, so ask ps for the real device.
+terminal_device() {
+	terminal_name=$(ps -o tty= -p $$ 2>/dev/null | tr -d ' ')
+	case "$terminal_name" in
+		''|'?'|'??') terminal_name=$(tty 2>/dev/null) && echo "$terminal_name" ;;
+		/dev/*) echo "$terminal_name" ;;
+		*) echo "/dev/$terminal_name" ;;
+	esac
+}
+
 # Create a new ed25519 signing key and print its fingerprint
 create_signing_key() {
 	key_name=$(git_user_get user.name)
@@ -229,7 +241,7 @@ create_signing_key() {
 	git config -f "$(git_user_config)" user.email "$key_email"
 
 	# pinentry needs to know which terminal to ask for the passphrase on
-	GPG_TTY=$(tty) || true
+	GPG_TTY=$(terminal_device)
 	export GPG_TTY
 
 	log "info" "Creating a new GPG key for $key_name <$key_email> (you will be asked for a passphrase)..." >&2
