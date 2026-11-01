@@ -253,11 +253,12 @@ create_signing_key() {
 offer_github_upload() {
 	upload_fpr=$1
 	upload_id=$2
-	if ! command -v gh >/dev/null 2>&1 || ! gh auth status >/dev/null 2>&1; then
+	if ! gh_logged_in; then
 		log "info" "Add the public key at https://github.com/settings/gpg/new:"
 		gpg --armor --export "$upload_fpr"
 		return 0
 	fi
+	PATH="$HOME/.local/bin:$PATH"
 	if gh gpg-key list 2>/dev/null | grep -qi "$upload_id"; then
 		log "info" "Key $upload_id is already on your GitHub account."
 		return 0
@@ -269,6 +270,81 @@ offer_github_upload() {
 		log "success" "Key $upload_id added to GitHub"
 	else
 		log "error" "Upload failed. You may need: gh auth refresh -s write:gpg_key"
+	fi
+}
+
+GH_REPO="cli/cli"
+GH_HOME="$HOME/.local/share/gh-cli"
+
+# True when gh is installed and logged in to GitHub
+gh_logged_in() {
+	has_command gh && (PATH="$HOME/.local/bin:$PATH" gh auth status >/dev/null 2>&1)
+}
+
+# Install the GitHub CLI: Homebrew on macOS, the latest GitHub release on Linux
+# (into ~/.local/share/gh-cli with a link in ~/.local/bin, so no sudo is needed)
+install_gh() {
+	if has_command gh; then
+		return 0
+	fi
+	log "info" "Installing GitHub CLI..."
+	if [ "$(uname)" = "Darwin" ]; then
+		if ! load_brew; then
+			log "error" "Homebrew is required to install gh on macOS."
+			return 1
+		fi
+		brew install gh
+		return
+	fi
+
+	case "$(cpu_arch)" in
+		x64) gh_arch=amd64 ;;
+		arm64) gh_arch=arm64 ;;
+		*) log "error" "Unsupported CPU for gh: $(uname -m)"; return 1 ;;
+	esac
+	gh_url=$(github_release_asset "$GH_REPO" "_linux_${gh_arch}\\.tar\\.gz\$")
+	gh_sums_url=$(github_release_asset "$GH_REPO" '_checksums\.txt$')
+	if [ -z "$gh_url" ] || [ -z "$gh_sums_url" ]; then
+		log "error" "Couldn't find the latest gh release on GitHub."
+		return 1
+	fi
+	gh_file=$(basename "$gh_url")
+	gh_tmp=$(mktemp -d)
+	if ! download "$gh_url" "$gh_tmp/$gh_file" || ! download "$gh_sums_url" "$gh_tmp/checksums.txt"; then
+		rm -rf "$gh_tmp"
+		log "error" "gh download failed."
+		return 1
+	fi
+	if ! (cd "$gh_tmp" && grep " $gh_file\$" checksums.txt | sha256sum -c - >/dev/null); then
+		rm -rf "$gh_tmp"
+		log "error" "gh download doesn't match its checksum."
+		return 1
+	fi
+	mkdir -p "$gh_tmp/gh" "$HOME/.local/bin" "$HOME/.local/share"
+	tar xzf "$gh_tmp/$gh_file" -C "$gh_tmp/gh" --strip-components=1 || { rm -rf "$gh_tmp"; return 1; }
+	rm -rf "$GH_HOME"
+	mv "$gh_tmp/gh" "$GH_HOME"
+	rm -rf "$gh_tmp"
+	ln -sf "$GH_HOME/bin/gh" "$HOME/.local/bin/gh"
+	log "success" "gh installed ($("$HOME/.local/bin/gh" --version | head -n 1))"
+}
+
+# Install gh and log in to GitHub (HTTPS for Git, with the scope to upload GPG keys).
+# Git uses gh for github.com credentials through src/.gitconfig.
+# Pass --no-login to only install it (non-interactive runs).
+setup_gh() {
+	install_gh || return 1
+	if gh_logged_in; then
+		log "info" "gh is logged in to GitHub."
+		return 0
+	fi
+	[ "$1" = "--no-login" ] && return 0
+	log "info" "Logging in to GitHub..."
+	if PATH="$HOME/.local/bin:$PATH" gh auth login --hostname github.com --git-protocol https --web --scopes write:gpg_key; then
+		log "success" "gh logged in to GitHub"
+	else
+		log "error" "GitHub login didn't finish. Run 'dotfiles gh' to retry."
+		return 1
 	fi
 }
 

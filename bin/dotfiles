@@ -56,6 +56,7 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		create_user_folders=y
 		update_macos_defaults=y
 		setup_git_user=n
+		setup_gh_answer=y
 		link_gpg_agent=y
 		backup_gpg_agent=y
 		setup_podman_answer=y
@@ -81,6 +82,10 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 			setup_git_user=$(ask_no "Git user is $current_git_user. Edit it?")
 		else
 			setup_git_user=$(ask "Configure Git user (name and email)?")
+		fi
+		setup_gh_answer=n
+		if ! gh_logged_in; then
+			setup_gh_answer=$(ask "Log in to GitHub with gh (Git over HTTPS, GPG key upload)?")
 		fi
 		gpg_summary=$(gpg_setup_summary)
 		change_gpg_key=""
@@ -171,6 +176,16 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		setup_podman || log "error" "Podman setup didn't finish, see above. Run 'dotfiles podman' to retry."
 	fi
 
+	# Before GPG, so a new signing key can be uploaded to GitHub.
+	# Logging in opens a browser, so -y only installs gh.
+	if [ "$setup_gh_answer" = "y" ]; then
+		if [ -n "$assume_yes" ]; then
+			setup_gh --no-login || true
+		else
+			setup_gh || true
+		fi
+	fi
+
 	if [ "$link_gpg_agent" = "y" ]; then
 		mkdir -p "$HOME/.gnupg"
 		chmod 700 "$HOME/.gnupg"
@@ -253,13 +268,17 @@ if [ "$COMMAND" = "macos-vm" ]; then
 	setup_macos_vm "$vm_name"
 fi
 
+if [ "$COMMAND" = "gh" ]; then
+	setup_gh
+fi
+
 if [ "$COMMAND" = "gpg-key" ]; then
 	setup_gpg_key
 fi
 
 if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
 	log "" "${BOLD}Usage${RESET}"
-	log "" "dotfiles [install|link|bundle|update|config-user|gpg-key|node|podman|ai-tools|macos-vm|help]" 1
+	log "" "dotfiles [install|link|bundle|update|config-user|gh|gpg-key|node|podman|ai-tools|macos-vm|help]" 1
 
 	log "" "\n${BOLD}Commands${RESET}"
 	log "" "${BOLD}install${RESET}      📥 Installs the dotfiles, sets up Oh My Zsh, Homebrew, and applies macOS defaults." 2
@@ -267,6 +286,7 @@ if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
 	log "" "${BOLD}link${RESET}         🔗 Links the dotfiles to your home directory, ensuring all configurations are properly applied." 2
 	log "" "${BOLD}bundle${RESET}       🍺 Installs all Homebrew packages listed in the Brewfile." 2
 	log "" "${BOLD}config-user${RESET}  🛠️ Sets your Git name and email." 2
+	log "" "${BOLD}gh${RESET}           🐙 Installs the GitHub CLI and logs in, so Git uses it for github.com over HTTPS." 2
 	log "" "${BOLD}gpg-key${RESET}      🔑 Picks an existing GPG key or creates a new one for signing commits." 2
 	log "" "${BOLD}podman${RESET}       🐳 Installs Podman and makes the docker command use it (macOS, Debian, Fedora)." 2
 	log "" "${BOLD}node${RESET}         🟢 Installs the latest Node LTS (via fnm), pnpm (via Corepack) and Bun." 2

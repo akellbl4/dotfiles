@@ -46,6 +46,7 @@ The `dotfiles` command is on your `PATH` after install.
 | `dotfiles node` | Installs the latest Node LTS, pnpm and Bun |
 | `dotfiles podman` | Installs Podman and makes the `docker` command use it |
 | `dotfiles macos-vm [name]` | Installs Tart and creates a macOS virtual machine (Apple Silicon only) |
+| `dotfiles gh` | Installs the GitHub CLI and logs in to GitHub |
 | `dotfiles gpg-key` | Picks an existing GPG key or creates a new one for signing commits |
 | `dotfiles help` | Shows usage |
 
@@ -99,6 +100,12 @@ Some of the aliases:
 | `cleanup` | Delete local branches that are already merged |
 | `snapshot` | Stash the working tree without removing your changes |
 | `la` | List all aliases |
+
+### GitHub CLI
+
+`dotfiles gh` (also offered by `install` and `update` until you're logged in) installs [gh](https://cli.github.com) and runs `gh auth login` in the browser, with HTTPS as the Git protocol and the scope to upload GPG keys. On macOS gh comes from the Brewfile; on Linux the latest [release](https://github.com/cli/cli/releases) is checked against its published checksum and installed into `~/.local/share/gh-cli`, with `gh` linked in `~/.local/bin`, so no `sudo` is needed. With `-y` it's only installed, since logging in needs a browser.
+
+[`src/.gitconfig`](src/.gitconfig) makes Git use gh for `github.com` credentials, so cloning and pushing over HTTPS work without SSH keys, including on networks that block SSH port 22.
 
 ### GPG
 
