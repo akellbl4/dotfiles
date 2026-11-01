@@ -25,7 +25,7 @@ The script clones this repository into `~/.dotfiles` (or updates it if it is alr
 8. Sets up [Podman](#podman) and makes the `docker` command use it
 9. Links the GPG agent config and sets up a [commit signing key](#gpg)
 
-Running it again is safe. It only asks about folders that are missing or lack their icon, macOS defaults that differ from your settings, and the default shell while it isn't zsh. It shows your current Git user and signing key and only changes them if you choose to. Press Enter to accept the default shown in capitals (`Y/n` or `y/N`), or to keep the current value shown in brackets.
+Running it again is safe. It only asks about folders that are missing or lack their icon, macOS defaults that differ from your settings, and the default shell while it isn't zsh. `install` shows your current Git user and signing key and only changes them if you choose to; `update` doesn't ask about them once they're set up (use `dotfiles config-user` and `dotfiles gpg-key` to change them). Press Enter to accept the default shown in capitals (`Y/n` or `y/N`), or to keep the current value shown in brackets.
 
 When there is no terminal to prompt on, the script runs `dotfiles install -y`, which answers yes to everything except the Git user and GPG key questions, since those need your input.
 
@@ -109,7 +109,7 @@ Some of the aliases:
 ### GPG
 
 - [`gpg-agent.conf`](gpg-agent.conf) caches your passphrase for 4 hours
-- `dotfiles gpg-key` (also run by `install` and `update`) shows the key Git currently signs with and asks whether to change it. It then lists the signing keys in your keyring so you can:
+- `dotfiles gpg-key` (also run by `install`, and by `update` until GPG is set up) shows the key Git currently signs with and asks whether to change it. It then lists the signing keys in your keyring so you can:
   - **link an existing key** by its number, or
   - **create a new key** (ed25519, expires in 2 years) using your Git name and email
 

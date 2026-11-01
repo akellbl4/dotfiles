@@ -78,7 +78,11 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		elif ! zsh_is_default_shell; then
 			set_default_shell=$(ask "Make zsh your default shell?")
 		fi
-		if [ -n "$current_git_user" ]; then
+		# update leaves an existing Git user and GPG setup alone; config-user and gpg-key change them
+		if [ -n "$current_git_user" ] && [ "$COMMAND" = "update" ]; then
+			setup_git_user=n
+			log "info" "Git user: $current_git_user (change it with 'dotfiles config-user')"
+		elif [ -n "$current_git_user" ]; then
 			setup_git_user=$(ask_no "Git user is $current_git_user. Edit it?")
 		else
 			setup_git_user=$(ask "Configure Git user (name and email)?")
@@ -90,7 +94,10 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		fi
 		gpg_summary=$(gpg_setup_summary)
 		change_gpg_key=""
-		if [ -n "$gpg_summary" ]; then
+		if [ -n "$gpg_summary" ] && [ "$COMMAND" = "update" ]; then
+			link_gpg_agent=n
+			log "info" "GPG signs commits with $gpg_summary (change it with 'dotfiles gpg-key')"
+		elif [ -n "$gpg_summary" ]; then
 			link_gpg_agent=$(ask_no "GPG signs commits with $gpg_summary. Change it?")
 			[ "$link_gpg_agent" = "y" ] && change_gpg_key="--change"
 		else
