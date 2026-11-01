@@ -2,7 +2,7 @@
 	path =.gitconfig.user
 
 [core]
-	excludesfile = ~/.gitignore
+	excludesfile = ~/.gitignore_global
 	pager = less -x4 -r
 
 [help]
@@ -11,9 +11,6 @@
 [push]
 	default = simple
 	autoSetupRemote = true
-
-[commit]
-	gpgsign = true
 
 [diff]
 	algorithm = patience
@@ -36,17 +33,17 @@
 	cc = !git checkout $(git branch | fzf)
 	co =  checkout -b
 	b = branch
-	diff = diff --word-diff
+	wd = diff --word-diff
 	dc = diff --cached
-	pf = push --force
+	pf = push --force-with-lease
 	ir = rebase -i
 	undo = reset --soft HEAD^
 	rename = commit --amend --no-edit --no-verify
 	sync = "!git pull origin $(git remote show $(git remote) | awk '/HEAD branch/ {print $NF}') --rebase"
 
 	# Forward to tig
-	log = "tig log"
-	stash = "tig stash"
+	lg = "!tig log"
+	ss = "!tig stash"
 
 	# Remove merged branches
 	cleanup = "!git branch --merged | grep -v '\\*' | xargs -n 1 git branch -d"
@@ -85,8 +82,6 @@
 [color "diff"]
 	new=green
 	old=red
-	newMoved=green bold
-	oldMoved=red bold
 	newMoved=green dim
 	oldMoved=red dim
 	newMovedAlternative=green dim
@@ -101,9 +96,6 @@
 
 [submodule]
 	recurse = true
-
-[commit]
-	gpgsign=true
 
 [gpg]
 	program = gpg

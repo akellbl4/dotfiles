@@ -1,5 +1,3 @@
-tap "homebrew/bundle"
-
 # some packages do not have a sha256 checksum
 cask_args appdir: "/Applications", require_sha: true
 
@@ -15,10 +13,8 @@ brew "gnupg"
 
 # Quicklook plugins
 cask "qlmarkdown"                                       # Markdown https://github.com/sbarex/QLMarkdown
-cask "qlstephen"                                        # Text Files https://github.com/whomwah/qlstephen
 cask "qlvideo"                                          # Video https://github.com/Marginal/QLVideo
 cask "quicklook-json", args: { require_sha: false }     # JSON https://github.com/smittytone/PreviewJson
-cask "webpquicklook", args: { require_sha: false }      # WebP https://github.com/emin/WebPQuickLook
 cask "syntax-highlight"                                 # Code Syntax Highlight https://github.com/sbarex/SourceCodeSyntaxHighlight
 
 # Applications

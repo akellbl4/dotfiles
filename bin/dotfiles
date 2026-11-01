@@ -18,7 +18,7 @@ COMMAND=$1
 CURRENT_DIR=$(pwd)
 
 # Print the title at the start of any command
-printf "\n${BOLD}⚙️  Dotfiles${RESET}\n\n"
+printf "\n%b⚙️  Dotfiles%b\n\n" "$BOLD" "$RESET"
 
 if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 	if [ "$2" = "-y" ]; then
@@ -45,16 +45,14 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		touch "$DOTFILES_ROOT/.zshrc.user.sh"
 	fi
 
-	if [ -f "$DOTFILES_ROOT/.zshrc.user.sh" ]; then
-		chmod +x "$DOTFILES_ROOT/.zshrc.user.sh"
-	fi
+	chmod +x "$DOTFILES_ROOT/.zshrc.user.sh"
 
 	if [ ! -d "$HOME/.oh-my-zsh" ]; then
 		log "info" "Installing Oh My Zsh!"
 		sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 	fi
 
-	dotfiles
+	sync_repo
 
 	if [ "$(uname)" = "Darwin" ]; then
 		if [ "$create_user_folders" = "y" ]; then
@@ -113,19 +111,20 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		log "success" "Dotfiles updated"
 	fi
 
-	cd "$CURRENT_DIR"
-	env zsh -l
+	cd "$CURRENT_DIR" || exit
+	exec zsh -l
 fi
 
 if [ "$COMMAND" = "link" ]; then
 	log "info" "Linking dotfiles..."
-	dotfiles
-	cd "$CURRENT_DIR"
+	sync_repo
+	cd "$CURRENT_DIR" || exit
 	log "success" "Dotfiles linked. Run 'reload' or open a new shell to apply."
 fi
 
 if [ "$COMMAND" = "bundle" ]; then
-	log "info" " Installing Homebrew packages..."
+	log "info" "Installing Homebrew packages..."
+	load_brew
 	brew bundle install --file="$DOTFILES_ROOT/Brewfile"
 	log "success" "Homebrew packages installed"
 fi

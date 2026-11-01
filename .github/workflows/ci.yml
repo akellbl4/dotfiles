@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck
+        run: shellcheck --shell=sh --severity=warning install.sh bin/dotfiles utils.sh variables.sh homebrew.sh gpg-agent.sh
+
+  link:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Copy checkout to ~/.dotfiles
+        run: cp -R "$GITHUB_WORKSPACE" "$HOME/.dotfiles"
+      - name: Run dotfiles link
+        run: sh "$HOME/.dotfiles/bin/dotfiles" link
+      - name: Verify links
+        run: |
+          for f in .zshrc .gitconfig .editorconfig .gitignore_global; do
+            test -L "$HOME/$f" || { echo "$f is not linked"; exit 1; }
+          done
+          test -L "$HOME/.oh-my-zsh/custom/aliases.zsh"
+          test "$(git config --global core.excludesfile)" = "~/.gitignore_global"

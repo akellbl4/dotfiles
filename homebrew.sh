@@ -1,2 +1,4 @@
 export HOMEBREW_NO_ENV_HINTS=1
-eval "$(/opt/homebrew/bin/brew shellenv)" &>/dev/null
+if [ -x /opt/homebrew/bin/brew ]; then
+	eval "$(/opt/homebrew/bin/brew shellenv)"
+fi

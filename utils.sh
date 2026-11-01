@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+# shellcheck disable=SC2034 # color variables are used by scripts that source this file
 
 # Define styling variables
 BOLD='\033[1m'
@@ -19,29 +20,25 @@ BG_CYAN='\033[46m'
 RESET='\033[0m'
 
 log() {
-    local type="$1"
-    local message="$2"
-    local indent=${3:-0}
+	log_type="$1"
+	log_message="$2"
+	log_indent=${3:-0}
 
-    # Define styling based on log type
-    case "$type" in
-        "info")
-            local style=${BLUE} ;; # Bold blue
-        "success")
-            local style=${GREEN} ;; # Bold green
-        "error")
-            local style=${RED} ;; # Bold red
-        *)
-            local style=${RESET} ;;
-    esac
+	# Define styling based on log type
+	case "$log_type" in
+		"info") log_style=${BLUE} ;;
+		"success") log_style=${GREEN} ;;
+		"error") log_style=${RED} ;;
+		*) log_style=${RESET} ;;
+	esac
 
-    # Apply indent and styling
-    local prefix=""
-    if [ "$indent" -gt 0 ]; then
-        prefix="$(printf ' %.0s' $(seq 1 $indent))"
-    fi
+	# Apply indent and styling
+	log_prefix=""
+	if [ "$log_indent" -gt 0 ]; then
+		log_prefix=$(printf "%${log_indent}s" "")
+	fi
 
-    printf "%b\n" "${prefix}${style}${message}${RESET}"
+	printf "%b\n" "${log_prefix}${log_style}${log_message}${RESET}"
 }
 
 # Prompt a yes/no question (default yes) and print "y" or "n"
@@ -54,22 +51,23 @@ ask() {
 	esac
 }
 
-# Put brew on PATH for this shell, wherever it is installed
+# Put Homebrew on PATH for this shell
 load_brew() {
-	for brew_bin in /opt/homebrew/bin/brew /usr/local/bin/brew; do
-		if [ -x "$brew_bin" ]; then
-			eval "$("$brew_bin" shellenv)"
-			return 0
-		fi
-	done
+	if [ -x /opt/homebrew/bin/brew ]; then
+		eval "$(/opt/homebrew/bin/brew shellenv)"
+		return 0
+	fi
 	command -v brew >/dev/null 2>&1
 }
 
-dotfiles() {
+# Clone or update the dotfiles repo, then link everything into place
+sync_repo() {
 	if [ -d "$DOTFILES_ROOT/.git" ]; then
 		log "info" "Updating dotfiles..."
-		cd "$DOTFILES_ROOT" || exit
-		git pull origin main
+		if ! git -C "$DOTFILES_ROOT" pull --ff-only origin main; then
+			log "error" "Could not update $DOTFILES_ROOT (local changes or diverged history). Commit or stash them and retry."
+			return 1
+		fi
 		log "success" "Dotfiles updated"
 	else
 		log "info" "Installing dotfiles..."
@@ -97,54 +95,49 @@ link_files() {
 	find "$src_dir" -maxdepth 1 -type f | while read -r source_file; do
 		target_file="$target_dir/$(basename "$source_file")"
 
-		# if target file exists, backup it
+		# if target is a real file, back it up
 		if [ -f "$target_file" ] && [ ! -L "$target_file" ]; then
-			mv "$target_file" "$target_file.$(date "+%Y%m%d%H%M%S").bak" > /dev/null 2>&1
+			mv "$target_file" "$target_file.$(date "+%Y%m%d%H%M%S").bak"
 		fi
 
-		# if target file is a symbolic link, remove it
-		if [ -L "$target_file" ]; then
-			rm -rf "$target_file" > /dev/null 2>&1
-		fi
-
-		log "info" "$(ln -sv "$source_file" "$target_file")" 1
+		log "info" "$(ln -sfv "$source_file" "$target_file")" 1
 	done
 	log "success" "$name linked"
 }
 
 configure_git_user() {
-    log "info" "Configuring Git user settings..."
-    printf "Enter your full name (or press Enter to skip): " >&2
-    read -r full_name || full_name=""
-    printf "Enter your email (or press Enter to skip): " >&2
-    read -r email || email=""
-    printf "Enter your GPG signing key (or press Enter to skip): " >&2
-    read -r signing_key || signing_key=""
+	log "info" "Configuring Git user settings..."
+	printf "Enter your full name (or press Enter to skip): " >&2
+	read -r full_name || full_name=""
+	printf "Enter your email (or press Enter to skip): " >&2
+	read -r email || email=""
+	printf "Enter your GPG signing key (or press Enter to skip): " >&2
+	read -r signing_key || signing_key=""
 
-    # Create or update src/.gitconfig.user
-    echo "[user]" > "$DOTFILES_ROOT/src/.gitconfig.user"
-    if [ -n "$full_name" ]; then printf "\tname = %s\n" "$full_name" >> "$DOTFILES_ROOT/src/.gitconfig.user"; fi
-    if [ -n "$email" ]; then printf "\temail = %s\n" "$email" >> "$DOTFILES_ROOT/src/.gitconfig.user"; fi
-    if [ -n "$signing_key" ]; then printf "\tsigningkey = %s\n" "$signing_key" >> "$DOTFILES_ROOT/src/.gitconfig.user"; fi
+	user_config="$DOTFILES_ROOT/src/.gitconfig.user"
+	echo "[user]" > "$user_config"
+	if [ -n "$full_name" ]; then printf "\tname = %s\n" "$full_name" >> "$user_config"; fi
+	if [ -n "$email" ]; then printf "\temail = %s\n" "$email" >> "$user_config"; fi
+	# Only sign commits when a key is configured, otherwise every commit would fail
+	if [ -n "$signing_key" ]; then
+		printf "\tsigningkey = %s\n" "$signing_key" >> "$user_config"
+		printf "[commit]\n\tgpgsign = true\n" >> "$user_config"
+	fi
+	ln -sf "$user_config" "$HOME/.gitconfig.user"
 
-    log "info" "Git user settings configured."
+	log "info" "Git user settings configured."
 }
 
 user_folders() {
 	log "info" "Creating user folders..."
-	if [ ! -d "$HOME/Screenshots" ]; then
-		mkdir ~/Screenshots;
-		log "success" "$HOME/Screenshots folder created"
-	else
-		log "info" "Screenshots folder already exists"
-	fi
-
-	if [ ! -d "$HOME/Developer" ]; then
-		mkdir ~/Developer;
-		log "success" "$HOME/Developer folder created"
-	else
-		log "info" "Developer folder already exists"
-	fi
+	for folder in Screenshots Developer; do
+		if [ ! -d "$HOME/$folder" ]; then
+			mkdir "$HOME/$folder"
+			log "success" "$HOME/$folder folder created"
+		else
+			log "info" "$folder folder already exists"
+		fi
+	done
 }
 
 macos_defaults() {
@@ -159,9 +152,6 @@ macos_defaults() {
 	# Simple window scale effect
 	defaults write com.apple.dock mineffect -string scale
 
-	# Kill Dashboard permanently
-	defaults write com.apple.dashboard mcx-disabled -boolean TRUE
-
 	# Zero timeout to show hidden Dock
 	defaults write com.apple.dock autohide-delay -float 0
 
@@ -169,7 +159,7 @@ macos_defaults() {
 	defaults write com.apple.dock autohide-time-modifier -float 0.3
 
 	# Set default folder for screenshots
-	defaults write com.apple.screencapture location ~/Screenshots
+	defaults write com.apple.screencapture location "$HOME/Screenshots"
 
 	# Disable Google Chrome auto-update
 	defaults write com.google.Keystone.Agent checkInterval 0

@@ -2,18 +2,17 @@ export DOTFILES_ROOT="$HOME/.dotfiles"
 
 . "$DOTFILES_ROOT/variables.sh"
 
-# Ensure Oh My Zsh is sourced correctly
-if [ -f "$DOTFILES_ROOT/oh-my-zsh.sh" ]; then
-    . "$DOTFILES_ROOT/oh-my-zsh.sh"
-fi
-
-# Source Homebrew configuration
+# Source Homebrew first so Oh My Zsh picks up Homebrew completions
 if [ -f "$DOTFILES_ROOT/homebrew.sh" ]; then
     . "$DOTFILES_ROOT/homebrew.sh"
 fi
 
+if [ -f "$DOTFILES_ROOT/oh-my-zsh.sh" ]; then
+    . "$DOTFILES_ROOT/oh-my-zsh.sh"
+fi
+
 if [ -f "$DOTFILES_ROOT/gpg-agent.sh" ]; then
-		. "$DOTFILES_ROOT/gpg-agent.sh"
+    . "$DOTFILES_ROOT/gpg-agent.sh"
 fi
 
 if [ -f "$DOTFILES_ROOT/.zshrc.user.sh" ]; then
