@@ -21,7 +21,8 @@ The script clones this repository into `~/.dotfiles` (or updates it if it is alr
 4. Creates `~/Screenshots` and `~/Developer` if they're missing
 5. Applies [macOS defaults](#macos-defaults)
 6. Installs Homebrew and everything in the [`Brewfile`](Brewfile)
-7. Links the GPG agent config and sets up a [commit signing key](#gpg)
+7. Sets up [Podman](#podman) and makes the `docker` command use it
+8. Links the GPG agent config and sets up a [commit signing key](#gpg)
 
 Running it again is safe. It only asks about folders that are missing, shows your current Git user and signing key and only changes them if you choose to. Press Enter to accept the default shown in capitals (`Y/n` or `y/N`), or to keep the current value shown in brackets.
 
@@ -40,6 +41,7 @@ The `dotfiles` command is on your `PATH` after install.
 | `dotfiles link` | Pulls the latest changes and re-creates the symlinks |
 | `dotfiles bundle` | Installs everything in the `Brewfile` |
 | `dotfiles config-user` | Edits your Git name and email |
+| `dotfiles podman` | Installs Podman and makes the `docker` command use it |
 | `dotfiles gpg-key` | Picks an existing GPG key or creates a new one for signing commits |
 | `dotfiles help` | Shows usage |
 
@@ -100,6 +102,19 @@ Some of the aliases:
   - **create a new key** (ed25519, expires in 2 years) using your Git name and email
 
   The chosen key is saved to `.gitconfig.user` and commit signing is turned on. If you're logged in to `gh` and the key isn't on your GitHub account yet, it offers to upload it. Otherwise it prints the public key to add by hand.
+
+### Podman
+
+`dotfiles podman` (also offered by `install` and `update` until it's set up) works on macOS, Debian/Ubuntu and Fedora, including Asahi and Bazzite:
+
+| System | How Podman is installed |
+| --- | --- |
+| macOS | Homebrew, then the Podman virtual machine is created and started |
+| Debian, Ubuntu | `apt-get` |
+| Fedora, Fedora Asahi Remix | `dnf` |
+| Bazzite, Silverblue | Already included; if missing, added with `rpm-ostree` (reboot, then run `dotfiles podman` again) |
+
+It then links `~/.local/bin/docker` to `podman`, so `docker` commands and scripts run Podman. If a real Docker is already installed, it is left alone and nothing is linked.
 
 ### macOS defaults
 

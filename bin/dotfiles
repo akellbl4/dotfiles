@@ -39,6 +39,7 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		setup_git_user=n
 		link_gpg_agent=y
 		backup_gpg_agent=y
+		setup_podman_answer=y
 	else
 		create_user_folders=n
 		if [ -n "$missing_folders" ]; then
@@ -51,6 +52,10 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 			setup_git_user=$(ask "Configure Git user (name and email)?")
 		fi
 		link_gpg_agent=$(ask "Set up GPG (agent config and commit signing key)?")
+		setup_podman_answer=n
+		if ! podman_ready; then
+			setup_podman_answer=$(ask "Set up Podman and make the docker command use it?")
+		fi
 	fi
 
 	log "info" "Setting up dotfiles..."
@@ -103,6 +108,10 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 				fi
 			fi
 		fi
+	fi
+
+	if [ "$setup_podman_answer" = "y" ] && ! podman_ready; then
+		setup_podman || log "error" "Podman setup didn't finish, see above. Run 'dotfiles podman' to retry."
 	fi
 
 	if [ "$link_gpg_agent" = "y" ]; then
@@ -160,13 +169,17 @@ if [ "$COMMAND" = "config-user" ]; then
 	log "success" "Git user settings updated."
 fi
 
+if [ "$COMMAND" = "podman" ]; then
+	setup_podman
+fi
+
 if [ "$COMMAND" = "gpg-key" ]; then
 	setup_gpg_key
 fi
 
 if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
 	log "" "${BOLD}Usage${RESET}"
-	log "" "dotfiles [install|link|bundle|update|config-user|gpg-key|help]" 1
+	log "" "dotfiles [install|link|bundle|update|config-user|gpg-key|podman|help]" 1
 
 	log "" "\n${BOLD}Commands${RESET}"
 	log "" "${BOLD}install${RESET}      📥 Installs the dotfiles, sets up Oh My Zsh, Homebrew, and applies macOS defaults." 2
@@ -175,6 +188,7 @@ if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
 	log "" "${BOLD}bundle${RESET}       🍺 Installs all Homebrew packages listed in the Brewfile." 2
 	log "" "${BOLD}config-user${RESET}  🛠️ Sets your Git name and email." 2
 	log "" "${BOLD}gpg-key${RESET}      🔑 Picks an existing GPG key or creates a new one for signing commits." 2
+	log "" "${BOLD}podman${RESET}       🐳 Installs Podman and makes the docker command use it (macOS, Debian, Fedora)." 2
 	log "" "${BOLD}help${RESET}         ❓ Displays usage information for the dotfiles command." 2
 
 	log "success" "\nEnjoy managing your development environment with Dotfiles!\n"

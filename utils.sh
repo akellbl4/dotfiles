@@ -188,7 +188,8 @@ list_signing_keys() {
 # Human-readable expiry for an epoch timestamp
 format_expiry() {
 	if [ -n "$1" ]; then
-		echo "expires $(date -r "$1" "+%Y-%m-%d")"
+		# BSD date (macOS) uses -r, GNU date (Linux) uses -d @
+		echo "expires $(date -r "$1" "+%Y-%m-%d" 2>/dev/null || date -d "@$1" "+%Y-%m-%d")"
 	else
 		echo "never expires"
 	fi
@@ -345,6 +346,110 @@ user_folders() {
 		mkdir "$HOME/$folder"
 		log "success" "$HOME/$folder folder created"
 	done
+}
+
+# Print the Linux package family: debian, fedora, fedora-atomic (Bazzite, Silverblue) or unknown
+linux_family() {
+	os_release=${1:-/etc/os-release}
+	ostree_marker=${2:-/run/ostree-booted}
+	if [ ! -r "$os_release" ]; then
+		echo "unknown"
+		return 0
+	fi
+	os_ids=$(unset ID ID_LIKE; . "$os_release"; echo "$ID $ID_LIKE")
+	case " $os_ids " in
+		*" fedora "*)
+			if [ -e "$ostree_marker" ]; then echo "fedora-atomic"; else echo "fedora"; fi
+			;;
+		*" debian "*|*" ubuntu "*) echo "debian" ;;
+		*) echo "unknown" ;;
+	esac
+}
+
+DOCKER_LINK="$HOME/.local/bin/docker"
+
+# True when Podman is installed, its VM exists (macOS) and the docker command is set up
+podman_ready() {
+	command -v podman >/dev/null 2>&1 || return 1
+	if [ "$(uname)" = "Darwin" ] && [ -z "$(podman machine list --format '{{.Name}}' 2>/dev/null)" ]; then
+		return 1
+	fi
+	[ -L "$DOCKER_LINK" ] || [ -n "$(other_docker)" ]
+}
+
+# Path of a docker command that isn't our Podman link, empty if there is none
+other_docker() {
+	(
+		PATH=$(printf "%s" "$PATH" | tr ':' '\n' | grep -vx "$HOME/.local/bin" | paste -sd: -)
+		command -v docker 2>/dev/null || true
+	)
+}
+
+install_podman() {
+	if command -v podman >/dev/null 2>&1; then
+		log "info" "Podman already installed ($(podman --version))"
+		return 0
+	fi
+
+	log "info" "Installing Podman..."
+	if [ "$(uname)" = "Darwin" ]; then
+		if ! load_brew; then
+			log "error" "Homebrew is required to install Podman on macOS."
+			return 1
+		fi
+		brew install podman
+		return
+	fi
+
+	case "$(linux_family)" in
+		debian)
+			sudo apt-get update && sudo apt-get install -y podman
+			;;
+		fedora)
+			sudo dnf install -y podman
+			;;
+		fedora-atomic)
+			# Image-based Fedora (Bazzite, Silverblue) normally ships Podman; layer it if it's missing
+			sudo rpm-ostree install podman
+			log "info" "Podman is layered and will be available after a reboot. Then run 'dotfiles podman' to finish."
+			return 1
+			;;
+		*)
+			log "error" "Unsupported system. Install Podman yourself, then run 'dotfiles podman'."
+			return 1
+			;;
+	esac
+}
+
+# On macOS containers run in a Linux VM: create it once and make sure it's running
+start_podman_machine() {
+	[ "$(uname)" = "Darwin" ] || return 0
+	if [ -z "$(podman machine list --format '{{.Name}}' 2>/dev/null)" ]; then
+		log "info" "Creating the Podman virtual machine (downloads a Linux image)..."
+		podman machine init
+	fi
+	if [ "$(podman machine inspect --format '{{.State}}' 2>/dev/null)" != "running" ]; then
+		log "info" "Starting the Podman virtual machine..."
+		podman machine start
+	fi
+}
+
+# Make `docker` run Podman, unless a real Docker is installed
+link_docker_to_podman() {
+	existing_docker=$(other_docker)
+	if [ -n "$existing_docker" ]; then
+		log "info" "Docker is already installed at $existing_docker, so docker is not linked to Podman."
+		return 0
+	fi
+	mkdir -p "$(dirname "$DOCKER_LINK")"
+	ln -sf "$(command -v podman)" "$DOCKER_LINK"
+	log "success" "docker now runs Podman ($DOCKER_LINK -> $(command -v podman))"
+}
+
+setup_podman() {
+	install_podman || return 1
+	start_podman_machine || return 1
+	link_docker_to_podman
 }
 
 macos_defaults() {

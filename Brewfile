@@ -10,6 +10,7 @@ brew "iperf"
 brew "mkcert"
 brew "fzf"
 brew "gnupg"
+brew "podman"
 
 # Quicklook plugins
 cask "qlmarkdown"                                       # Markdown https://github.com/sbarex/QLMarkdown

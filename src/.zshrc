@@ -19,5 +19,5 @@ if [ -f "$DOTFILES_ROOT/.zshrc.user.sh" ]; then
     . "$DOTFILES_ROOT/.zshrc.user.sh"
 fi
 
-# Add dotfiles bin directory to PATH
-export PATH="$DOTFILES_ROOT/bin:$PATH"
+# Add dotfiles bin directory and ~/.local/bin (docker -> podman link) to PATH
+export PATH="$DOTFILES_ROOT/bin:$HOME/.local/bin:$PATH"
