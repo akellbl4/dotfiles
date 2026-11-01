@@ -112,112 +112,230 @@ link_files() {
 	log "success" "$name linked"
 }
 
-configure_git_user() {
-	log "info" "Configuring Git user settings..."
-	printf "Enter your full name (or press Enter to skip): " >&2
-	read -r full_name || full_name=""
-	printf "Enter your email (or press Enter to skip): " >&2
-	read -r email || email=""
-	printf "Enter your GPG signing key (or press Enter to skip): " >&2
-	read -r signing_key || signing_key=""
-
-	user_config="$DOTFILES_ROOT/src/.gitconfig.user"
-	echo "[user]" > "$user_config"
-	if [ -n "$full_name" ]; then printf "\tname = %s\n" "$full_name" >> "$user_config"; fi
-	if [ -n "$email" ]; then printf "\temail = %s\n" "$email" >> "$user_config"; fi
-	# Only sign commits when a key is configured, otherwise every commit would fail
-	if [ -n "$signing_key" ]; then
-		printf "\tsigningkey = %s\n" "$signing_key" >> "$user_config"
-		printf "[commit]\n\tgpgsign = true\n" >> "$user_config"
-	fi
-	ln -sf "$user_config" "$HOME/.gitconfig.user"
-
-	log "info" "Git user settings configured."
+# Path to the personal Git config (name, email, signing key)
+git_user_config() {
+	echo "$DOTFILES_ROOT/src/.gitconfig.user"
 }
 
-# Offer to create a GPG signing key and configure Git to use it
-setup_gpg_key() {
-	user_config="$DOTFILES_ROOT/src/.gitconfig.user"
+# Read a value from the personal Git config, empty if unset
+git_user_get() {
+	git config -f "$(git_user_config)" "$1" 2>/dev/null || true
+}
 
-	load_brew || true
-	if ! command -v gpg >/dev/null 2>&1; then
-		log "error" "gpg not found, skipping key setup. Run 'dotfiles bundle' to install gnupg."
-		return 0
+# Prompt for a value, showing the current one; Enter keeps it
+prompt_value() {
+	if [ -n "$2" ]; then
+		printf "%s [%s]: " "$1" "$2" >&2
+	else
+		printf "%s: " "$1" >&2
 	fi
+	read -r value || value=""
+	echo "${value:-$2}"
+}
 
-	existing_key=$(git config -f "$user_config" user.signingkey 2>/dev/null || true)
-	if [ -n "$existing_key" ]; then
-		log "info" "Git signing key already configured ($existing_key)"
-		return 0
-	fi
+# Prompt a yes/no question that defaults to no and print "y" or "n"
+ask_no() {
+	printf "%s (y/N) > " "$1" >&2
+	read -r answer || answer=""
+	case "$answer" in
+		[yY]*) echo "y" ;;
+		*) echo "n" ;;
+	esac
+}
 
-	if [ -n "$(gpg --list-secret-keys --with-colons 2>/dev/null)" ]; then
-		log "info" "Existing GPG keys:"
-		gpg --list-secret-keys --keyid-format long 2>/dev/null | sed 's/^/  /'
-		log "info" "To use one of them, run 'dotfiles config-user' and enter its key ID."
+# Print "Name <email>" from the personal Git config, empty if not configured
+git_user_summary() {
+	summary_name=$(git_user_get user.name)
+	summary_email=$(git_user_get user.email)
+	if [ -n "$summary_name" ] || [ -n "$summary_email" ]; then
+		echo "${summary_name:-?} <${summary_email:-?}>"
 	fi
+}
 
-	if [ "$(ask "No Git signing key configured. Create a new GPG key?")" != "y" ]; then
-		return 0
-	fi
+# Ask for Git name and email, keeping current values on Enter.
+# The signing key is managed separately by setup_gpg_key.
+configure_git_user() {
+	log "info" "Configuring Git user settings (press Enter to keep the current value)..."
+	user_config=$(git_user_config)
+	new_name=$(prompt_value "Full name" "$(git_user_get user.name)")
+	new_email=$(prompt_value "Email" "$(git_user_get user.email)")
 
-	key_name=$(git config -f "$user_config" user.name 2>/dev/null || true)
-	key_email=$(git config -f "$user_config" user.email 2>/dev/null || true)
-	if [ -z "$key_name" ]; then
-		printf "Name for the key: " >&2
-		read -r key_name || key_name=""
+	touch "$user_config"
+	if [ -n "$new_name" ]; then git config -f "$user_config" user.name "$new_name"; fi
+	if [ -n "$new_email" ]; then git config -f "$user_config" user.email "$new_email"; fi
+	ln -sf "$user_config" "$HOME/.gitconfig.user"
+
+	log "success" "Git user: $(git_user_summary)"
+}
+
+# List usable secret signing keys, one per line: fingerprint|key id|user id|expiry (epoch, empty if none)
+list_signing_keys() {
+	gpg --list-secret-keys --with-colons --fixed-list-mode 2>/dev/null | awk -F: '
+		$1 == "sec" { usable = ($2 != "r" && $2 != "e" && $2 != "d" && $12 ~ /S/); keyid = $5; expiry = $7; fpr = ""; printed = 0; next }
+		$1 == "fpr" && fpr == "" { fpr = $10; next }
+		$1 == "uid" && $2 != "r" && usable && !printed && fpr != "" { printf "%s|%s|%s|%s\n", fpr, keyid, $10, expiry; printed = 1 }
+	'
+}
+
+# Human-readable expiry for an epoch timestamp
+format_expiry() {
+	if [ -n "$1" ]; then
+		echo "expires $(date -r "$1" "+%Y-%m-%d")"
+	else
+		echo "never expires"
 	fi
-	if [ -z "$key_email" ]; then
-		printf "Email for the key (should match your GitHub email): " >&2
-		read -r key_email || key_email=""
+}
+
+# Describe a key by fingerprint or id: "KEYID  Name <email>, expires ..."
+describe_key() {
+	list_signing_keys | awk -F'|' -v k="$1" 'toupper($1) == toupper(k) || toupper($2) == toupper(k) || toupper(substr($1, length($1) - length(k) + 1)) == toupper(k)' | head -n 1 \
+		| while IFS='|' read -r d_fpr d_id d_uid d_exp; do
+			echo "$d_id  $d_uid, $(format_expiry "$d_exp")"
+		done
+}
+
+# Configure Git to sign commits with the given key
+use_signing_key() {
+	user_config=$(git_user_config)
+	touch "$user_config"
+	git config -f "$user_config" user.signingkey "$1"
+	git config -f "$user_config" commit.gpgsign true
+	ln -sf "$user_config" "$HOME/.gitconfig.user"
+}
+
+# Create a new ed25519 signing key and print its fingerprint
+create_signing_key() {
+	key_name=$(git_user_get user.name)
+	key_email=$(git_user_get user.email)
+	if [ -z "$key_name" ] || [ -z "$key_email" ]; then
+		log "info" "The key needs a name and email (these are also saved as your Git user)." >&2
+		key_name=$(prompt_value "Full name" "$key_name")
+		key_email=$(prompt_value "Email (should match your GitHub email)" "$key_email")
 	fi
 	if [ -z "$key_name" ] || [ -z "$key_email" ]; then
-		log "error" "Name and email are required to create a key, skipping."
-		return 0
+		log "error" "Name and email are required to create a key." >&2
+		return 1
 	fi
+	git config -f "$(git_user_config)" user.name "$key_name"
+	git config -f "$(git_user_config)" user.email "$key_email"
 
 	# pinentry needs to know which terminal to ask for the passphrase on
 	GPG_TTY=$(tty) || true
 	export GPG_TTY
 
-	log "info" "Creating GPG key for $key_name <$key_email> (you will be asked for a passphrase)..."
-	key_fpr=$(gpg --status-fd 1 --quick-generate-key "$key_name <$key_email>" ed25519 sign 2y \
-		| awk '/KEY_CREATED/ {print $NF}')
-	if [ -z "$key_fpr" ]; then
-		log "error" "GPG key creation failed"
+	log "info" "Creating a new GPG key for $key_name <$key_email> (you will be asked for a passphrase)..." >&2
+	gpg --status-fd 1 --quick-generate-key "$key_name <$key_email>" ed25519 sign 2y \
+		| awk '/KEY_CREATED/ {print $NF}'
+}
+
+# Offer to upload a public key to GitHub unless it is already there
+offer_github_upload() {
+	upload_fpr=$1
+	upload_id=$2
+	if ! command -v gh >/dev/null 2>&1 || ! gh auth status >/dev/null 2>&1; then
+		log "info" "Add the public key at https://github.com/settings/gpg/new:"
+		gpg --armor --export "$upload_fpr"
 		return 0
 	fi
-	log "success" "GPG key created: $key_fpr"
-
-	git config -f "$user_config" user.name "$key_name"
-	git config -f "$user_config" user.email "$key_email"
-	git config -f "$user_config" user.signingkey "$key_fpr"
-	git config -f "$user_config" commit.gpgsign true
-	ln -sf "$user_config" "$HOME/.gitconfig.user"
-	log "success" "Git configured to sign commits with $key_fpr"
-
-	if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1 \
-		&& [ "$(ask "Add the public key to your GitHub account?")" = "y" ]; then
-		if gpg --armor --export "$key_fpr" | gh gpg-key add -; then
-			log "success" "Public key added to GitHub"
-			return 0
-		fi
+	if gh gpg-key list 2>/dev/null | grep -qi "$upload_id"; then
+		log "info" "Key $upload_id is already on your GitHub account."
+		return 0
+	fi
+	if [ "$(ask "Add key $upload_id to your GitHub account?")" != "y" ]; then
+		return 0
+	fi
+	if gpg --armor --export "$upload_fpr" | gh gpg-key add -; then
+		log "success" "Key $upload_id added to GitHub"
+	else
 		log "error" "Upload failed. You may need: gh auth refresh -s write:gpg_key"
 	fi
+}
 
-	log "info" "Add this public key at https://github.com/settings/gpg/new:"
-	gpg --armor --export "$key_fpr"
+# Choose an existing GPG key or create a new one, and configure Git to sign commits with it
+setup_gpg_key() {
+	load_brew || true
+	if ! command -v gpg >/dev/null 2>&1; then
+		log "error" "gpg not found, skipping signing key setup. Run 'dotfiles bundle' to install gnupg."
+		return 0
+	fi
+
+	current_key=$(git_user_get user.signingkey)
+	if [ -n "$current_key" ]; then
+		current_desc=$(describe_key "$current_key")
+		log "info" "Git signs commits with: ${current_desc:-$current_key (not found in your GPG keyring!)}"
+		if [ "$(ask_no "Change the signing key?")" != "y" ]; then
+			return 0
+		fi
+	fi
+
+	keys=$(list_signing_keys)
+	choice=""
+	if [ -z "$keys" ]; then
+		log "info" "No GPG signing keys found in your keyring."
+		if [ "$(ask "Create a new GPG signing key?")" = "y" ]; then
+			choice="c"
+		fi
+	else
+		log "info" "Choose a GPG key for signing commits:"
+		index=0
+		echo "$keys" | while IFS='|' read -r k_fpr k_id k_uid k_exp; do
+			index=$((index + 1))
+			log "" "$index) Use existing key $k_id  $k_uid, $(format_expiry "$k_exp")" 2
+		done
+		log "" "c) Create a new key" 2
+		log "" "s) Skip" 2
+		while :; do
+			printf "Choice > " >&2
+			read -r choice || choice="s"
+			case "$choice" in
+				''|c|C|s|S) break ;;
+				*[!0-9]*) ;;
+				*) if [ "$choice" -gt 0 ] && [ -n "$(echo "$keys" | sed -n "${choice}p")" ]; then break; fi ;;
+			esac
+			log "error" "Enter a key number, c or s."
+		done
+	fi
+
+	case "$choice" in
+		c|C)
+			key_fpr=$(create_signing_key) || key_fpr=""
+			if [ -z "$key_fpr" ]; then
+				log "error" "GPG key creation failed"
+				return 0
+			fi
+			key_id=$(list_signing_keys | awk -F'|' -v f="$key_fpr" '$1 == f {print $2}')
+			use_signing_key "$key_fpr"
+			log "success" "Created new GPG key ${key_id:-$key_fpr} and set it as your Git signing key"
+			;;
+		''|s|S)
+			log "info" "Skipped signing key setup. Run 'dotfiles gpg-key' any time to set it up."
+			return 0
+			;;
+		*)
+			selected=$(echo "$keys" | sed -n "${choice}p")
+			key_fpr=$(echo "$selected" | cut -d'|' -f1)
+			key_id=$(echo "$selected" | cut -d'|' -f2)
+			use_signing_key "$key_fpr"
+			log "success" "Linked existing GPG key $key_id as your Git signing key"
+			;;
+	esac
+
+	offer_github_upload "$key_fpr" "$key_id"
+}
+
+# Print the default user folders that don't exist yet
+missing_user_folders() {
+	for folder in Screenshots Developer; do
+		if [ ! -d "$HOME/$folder" ]; then
+			echo "$folder"
+		fi
+	done
 }
 
 user_folders() {
-	log "info" "Creating user folders..."
-	for folder in Screenshots Developer; do
-		if [ ! -d "$HOME/$folder" ]; then
-			mkdir "$HOME/$folder"
-			log "success" "$HOME/$folder folder created"
-		else
-			log "info" "$folder folder already exists"
-		fi
+	for folder in $(missing_user_folders); do
+		mkdir "$HOME/$folder"
+		log "success" "$HOME/$folder folder created"
 	done
 }
 
@@ -238,6 +356,9 @@ macos_defaults() {
 
 	# Fast Dock showing animation (300ms)
 	defaults write com.apple.dock autohide-time-modifier -float 0.3
+
+	# Don't show suggested and recent apps in Dock
+	defaults write com.apple.dock show-recents -bool false
 
 	# Set default folder for screenshots
 	defaults write com.apple.screencapture location "$HOME/Screenshots"

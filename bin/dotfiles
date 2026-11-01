@@ -21,6 +21,9 @@ CURRENT_DIR=$(pwd)
 printf "\n%b⚙️  Dotfiles%b\n\n" "$BOLD" "$RESET"
 
 if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
+	missing_folders=$(missing_user_folders | tr '\n' ' ')
+	current_git_user=$(git_user_summary)
+
 	if [ "$2" = "-y" ]; then
 		create_user_folders=y
 		update_macos_defaults=y
@@ -28,15 +31,22 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		link_gpg_agent=y
 		backup_gpg_agent=y
 	else
-		create_user_folders=$(ask "Create default user folders?")
+		create_user_folders=n
+		if [ -n "$missing_folders" ]; then
+			create_user_folders=$(ask "Create missing user folders (${missing_folders% })?")
+		fi
 		update_macos_defaults=$(ask "Update macOS defaults?")
-		setup_git_user=$(ask "Configure Git user settings?")
-		link_gpg_agent=$(ask "Enable GPG agent and link configuration?")
+		if [ -n "$current_git_user" ]; then
+			setup_git_user=$(ask_no "Git user is $current_git_user. Edit it?")
+		else
+			setup_git_user=$(ask "Configure Git user (name and email)?")
+		fi
+		link_gpg_agent=$(ask "Set up GPG (agent config and commit signing key)?")
 	fi
 
 	log "info" "Setting up dotfiles..."
 
-	if [ ! -f "$DOTFILES_SRC/.gitconfig.user" ] && [ "$setup_git_user" = "y" ]; then
+	if [ "$setup_git_user" = "y" ]; then
 		configure_git_user
 	fi
 
@@ -56,9 +66,7 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 
 	if [ "$(uname)" = "Darwin" ]; then
 		if [ "$create_user_folders" = "y" ]; then
-			log "info" "Creating default user folders"
 			user_folders
-			log "success" "Default user folders created"
 		fi
 		if [ "$update_macos_defaults" = "y" ]; then
 			log "info" "Updating macOS defaults"
@@ -107,7 +115,7 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 			ln -sfv "$DOTFILES_ROOT/gpg-agent.conf" "$HOME/.gnupg/gpg-agent.conf"
 			log "success" "gpg-agent.conf linked successfully."
 		fi
-		# Key creation needs a passphrase, so it is skipped in non-interactive (-y) mode
+		# Choosing or creating a key needs input, so it is skipped in non-interactive (-y) mode
 		if [ "$2" != "-y" ]; then
 			setup_gpg_key
 		fi
@@ -156,8 +164,8 @@ if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
 	log "" "${BOLD}update${RESET}       🔄 Updates the dotfiles and re-applies configurations, ensuring everything is up-to-date." 2
 	log "" "${BOLD}link${RESET}         🔗 Links the dotfiles to your home directory, ensuring all configurations are properly applied." 2
 	log "" "${BOLD}bundle${RESET}       🍺 Installs all Homebrew packages listed in the Brewfile." 2
-	log "" "${BOLD}config-user${RESET}  🛠️ Configures Git user settings including name, email, and signing key." 2
-	log "" "${BOLD}gpg-key${RESET}      🔑 Creates a GPG signing key and configures Git to sign commits with it." 2
+	log "" "${BOLD}config-user${RESET}  🛠️ Sets your Git name and email." 2
+	log "" "${BOLD}gpg-key${RESET}      🔑 Picks an existing GPG key or creates a new one for signing commits." 2
 	log "" "${BOLD}help${RESET}         ❓ Displays usage information for the dotfiles command." 2
 
 	log "success" "\nEnjoy managing your development environment with Dotfiles!\n"

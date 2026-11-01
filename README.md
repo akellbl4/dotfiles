@@ -13,15 +13,17 @@ My macOS development environment: Zsh with Oh My Zsh, Homebrew packages, Git and
 curl -L https://github.com/akellbl4/dotfiles/raw/main/install.sh | bash
 ```
 
-The script clones this repository into `~/.dotfiles` and runs `dotfiles install`. It asks a few yes/no questions (Enter means yes), then:
+The script clones this repository into `~/.dotfiles` and runs `dotfiles install`. It asks a few questions up front, then:
 
-1. Saves your Git name, email and signing key to `src/.gitconfig.user`
+1. Saves your Git name and email to `src/.gitconfig.user`
 2. Installs [Oh My Zsh](https://ohmyz.sh)
 3. Symlinks the files in `src/` into `~`, `src/custom/` into `~/.oh-my-zsh/custom` and each `src/.config/<app>/` into `~/.config/<app>/`
-4. Creates `~/Screenshots` and `~/Developer`
+4. Creates `~/Screenshots` and `~/Developer` if they're missing
 5. Applies [macOS defaults](#macos-defaults)
 6. Installs Homebrew and everything in the [`Brewfile`](Brewfile)
-7. Links the GPG agent config and offers to create a signing key
+7. Links the GPG agent config and sets up a [commit signing key](#gpg)
+
+Running it again is safe. It only asks about folders that are missing, shows your current Git user and signing key and only changes them if you choose to. Press Enter to accept the default shown in capitals (`Y/n` or `y/N`), or to keep the current value shown in brackets.
 
 When there is no terminal to prompt on, the script runs `dotfiles install -y`, which answers yes to everything except the Git user and GPG key questions, since those need your input.
 
@@ -37,8 +39,8 @@ The `dotfiles` command is on your `PATH` after install.
 | `dotfiles update [-y]` | Pulls the latest changes and runs the full setup again |
 | `dotfiles link` | Pulls the latest changes and re-creates the symlinks |
 | `dotfiles bundle` | Installs everything in the `Brewfile` |
-| `dotfiles config-user` | Asks for your Git name, email and signing key |
-| `dotfiles gpg-key` | Creates a GPG signing key and sets Git up to use it |
+| `dotfiles config-user` | Edits your Git name and email |
+| `dotfiles gpg-key` | Picks an existing GPG key or creates a new one for signing commits |
 | `dotfiles help` | Shows usage |
 
 Updates only fast-forward. If `~/.dotfiles` has commits that aren't on `main`, the update stops so you can sort them out by hand.
@@ -85,7 +87,11 @@ Some of the aliases:
 ### GPG
 
 - [`gpg-agent.conf`](gpg-agent.conf) caches your passphrase for 4 hours
-- `dotfiles gpg-key` creates an ed25519 signing key that expires in 2 years, adds it to `.gitconfig.user`, turns on commit signing and, if you're logged in to `gh`, offers to upload the public key to GitHub
+- `dotfiles gpg-key` (also run by `install` and `update`) shows the key Git currently signs with and asks whether to change it. It then lists the signing keys in your keyring so you can:
+  - **link an existing key** by its number, or
+  - **create a new key** (ed25519, expires in 2 years) using your Git name and email
+
+  The chosen key is saved to `.gitconfig.user` and commit signing is turned on. If you're logged in to `gh` and the key isn't on your GitHub account yet, it offers to upload it. Otherwise it prints the public key to add by hand.
 
 ### macOS defaults
 
@@ -95,6 +101,7 @@ Set by `macos_defaults` in [`utils.sh`](utils.sh):
 - Print dialog expanded by default
 - Scale effect when minimizing windows
 - Dock appears instantly when hidden and animates faster
+- No suggested and recent apps in the Dock
 - Screenshots saved to `~/Screenshots`
 - Folders listed first in Finder and on the desktop
 
