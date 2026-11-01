@@ -273,6 +273,7 @@ offer_github_upload() {
 }
 
 # Choose an existing GPG key or create a new one, and configure Git to sign commits with it
+# Pass --change to skip the "Change the signing key?" confirmation (already asked)
 setup_gpg_key() {
 	load_brew || true
 	if ! command -v gpg >/dev/null 2>&1; then
@@ -284,7 +285,7 @@ setup_gpg_key() {
 	if [ -n "$current_key" ]; then
 		current_desc=$(describe_key "$current_key")
 		log "info" "Git signs commits with: ${current_desc:-$current_key (not found in your GPG keyring!)}"
-		if [ "$(ask_no "Change the signing key?")" != "y" ]; then
+		if [ "$1" != "--change" ] && [ "$(ask_no "Change the signing key?")" != "y" ]; then
 			return 0
 		fi
 	fi
@@ -342,6 +343,18 @@ setup_gpg_key() {
 	esac
 
 	offer_github_upload "$key_fpr" "$key_id"
+}
+
+# Describe the signing key when GPG is fully set up (agent config linked, Git signing
+# with a key that's in the keyring); prints nothing otherwise
+gpg_setup_summary() {
+	[ -L "$HOME/.gnupg/gpg-agent.conf" ] || return 0
+	[ "$(readlink "$HOME/.gnupg/gpg-agent.conf")" = "$DOTFILES_ROOT/gpg-agent.conf" ] || return 0
+	load_brew >/dev/null 2>&1 || true
+	command -v gpg >/dev/null 2>&1 || return 0
+	summary_key=$(git_user_get user.signingkey)
+	[ -n "$summary_key" ] || return 0
+	describe_key "$summary_key"
 }
 
 # Print the default user folders that don't exist yet
