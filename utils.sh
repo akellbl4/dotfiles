@@ -357,19 +357,41 @@ gpg_setup_summary() {
 	describe_key "$summary_key"
 }
 
-# Print the default user folders that don't exist yet
-missing_user_folders() {
-	for folder in Screenshots Developer; do
-		if [ ! -d "$HOME/$folder" ]; then
-			echo "$folder"
-		fi
+# Default user folders, one per line: name|SF Symbol for its Finder icon (empty: standard icon)
+user_folders_list() {
+	cat <<FOLDERS
+Screenshots|camera.viewfinder
+Developer|
+FOLDERS
+}
+
+# macOS 26 stores a folder's symbol icon in this extended attribute (older macOS ignores it)
+FOLDER_ICON_ATTR='com.apple.icon.folder#S'
+
+folder_icon_matches() {
+	[ -z "$2" ] && return 0
+	[ "$(xattr -p "$FOLDER_ICON_ATTR" "$1" 2>/dev/null)" = "{\"sym\":\"$2\"}" ]
+}
+
+# Print what the user folders still need, one per line, e.g. "create Developer" or "Screenshots icon"
+pending_user_folder_changes() {
+	user_folders_list | while IFS='|' read -r folder symbol; do
+		[ -d "$HOME/$folder" ] || echo "create $folder"
+		folder_icon_matches "$HOME/$folder" "$symbol" || echo "$folder icon"
 	done
 }
 
+# Create missing user folders and set their icons
 user_folders() {
-	for folder in $(missing_user_folders); do
-		mkdir "$HOME/$folder"
-		log "success" "$HOME/$folder folder created"
+	user_folders_list | while IFS='|' read -r folder symbol; do
+		if [ ! -d "$HOME/$folder" ]; then
+			mkdir "$HOME/$folder"
+			log "success" "$HOME/$folder folder created"
+		fi
+		if ! folder_icon_matches "$HOME/$folder" "$symbol"; then
+			xattr -w "$FOLDER_ICON_ATTR" "{\"sym\":\"$symbol\"}" "$HOME/$folder"
+			log "success" "$folder folder icon set to $symbol"
+		fi
 	done
 }
 

@@ -19,13 +19,13 @@ The script clones this repository into `~/.dotfiles` (or updates it if it is alr
 2. Saves your Git name and email to `src/.gitconfig.user`
 3. Installs [Oh My Zsh](https://ohmyz.sh)
 4. Symlinks the files in `src/` into `~`, `src/custom/` into `~/.oh-my-zsh/custom` and each `src/.config/<app>/` into `~/.config/<app>/`
-5. On macOS, creates `~/Screenshots` and `~/Developer` if they're missing, applies [macOS defaults](#macos-defaults), and installs Homebrew and everything in the [`Brewfile`](Brewfile)
+5. On macOS, creates `~/Screenshots` and `~/Developer` if they're missing and gives Screenshots a camera icon, applies [macOS defaults](#macos-defaults), and installs Homebrew and everything in the [`Brewfile`](Brewfile)
 6. Installs the latest [Node LTS, pnpm and Bun](#node-pnpm-and-bun), and moves to a newer LTS on later runs
 7. Installs the [AI coding tools](#ai-coding-tools) on Linux (on macOS they come from the `Brewfile`)
 8. Sets up [Podman](#podman) and makes the `docker` command use it
 9. Links the GPG agent config and sets up a [commit signing key](#gpg)
 
-Running it again is safe. It only asks about folders that are missing, macOS defaults that differ from your settings, and the default shell while it isn't zsh. It shows your current Git user and signing key and only changes them if you choose to. Press Enter to accept the default shown in capitals (`Y/n` or `y/N`), or to keep the current value shown in brackets.
+Running it again is safe. It only asks about folders that are missing or lack their icon, macOS defaults that differ from your settings, and the default shell while it isn't zsh. It shows your current Git user and signing key and only changes them if you choose to. Press Enter to accept the default shown in capitals (`Y/n` or `y/N`), or to keep the current value shown in brackets.
 
 When there is no terminal to prompt on, the script runs `dotfiles install -y`, which answers yes to everything except the Git user and GPG key questions, since those need your input.
 

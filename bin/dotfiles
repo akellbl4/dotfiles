@@ -49,7 +49,7 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		exec sh "$DOTFILES_ROOT/install.sh" "$@" --pulled --restarted
 	fi
 
-	missing_folders=$(missing_user_folders | tr '\n' ' ')
+	pending_folders=$(pending_user_folder_changes | awk 'NR > 1 { printf ", " } { printf "%s", $0 }')
 	current_git_user=$(git_user_summary)
 
 	if [ -n "$assume_yes" ]; then
@@ -67,8 +67,8 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		set_default_shell=n
 		# User folders and macOS defaults only apply on macOS
 		if [ "$(uname)" = "Darwin" ]; then
-			if [ -n "$missing_folders" ]; then
-				create_user_folders=$(ask "Create missing user folders (${missing_folders% })?")
+			if [ -n "$pending_folders" ]; then
+				create_user_folders=$(ask "Set up user folders ($pending_folders)?")
 			fi
 			changed_defaults=$(changed_macos_defaults | awk 'NR > 1 { printf ", " } { printf "%s", $0 }')
 			if [ -n "$changed_defaults" ]; then
