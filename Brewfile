@@ -13,7 +13,7 @@ brew "gnupg"
 
 # Quicklook plugins
 cask "qlmarkdown"                                       # Markdown https://github.com/sbarex/QLMarkdown
-cask "qlvideo"                                          # Video https://github.com/Marginal/QLVideo
+cask "quicklook-video"                                  # Video https://github.com/Marginal/QLVideo
 cask "syntax-highlight"                                 # Code Syntax Highlight https://github.com/sbarex/SourceCodeSyntaxHighlight
 
 # Applications
