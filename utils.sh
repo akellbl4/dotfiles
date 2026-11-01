@@ -364,25 +364,6 @@ install_gh() {
 	log "success" "gh installed ($("$HOME/.local/bin/gh" --version | head -n 1))"
 }
 
-# Install gh and log in to GitHub (HTTPS for Git, with the scope to upload GPG keys).
-# Git uses gh for github.com credentials through src/.gitconfig.
-# Pass --no-login to only install it (non-interactive runs).
-setup_gh() {
-	install_gh || return 1
-	if gh_logged_in; then
-		log "info" "gh is logged in to GitHub."
-		return 0
-	fi
-	[ "$1" = "--no-login" ] && return 0
-	log "info" "Logging in to GitHub..."
-	if PATH="$HOME/.local/bin:$PATH" gh auth login --hostname github.com --git-protocol https --web --scopes write:gpg_key; then
-		log "success" "gh logged in to GitHub"
-	else
-		log "error" "GitHub login didn't finish. Run 'dotfiles gh' to retry."
-		return 1
-	fi
-}
-
 # Choose an existing GPG key or create a new one, and configure Git to sign commits with it
 # Pass --change to skip the "Change the signing key?" confirmation (already asked)
 setup_gpg_key() {

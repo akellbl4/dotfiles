@@ -94,16 +94,6 @@
 [color "error"]
 	error = red bold
 
-# GitHub over HTTPS with the gh login (what `gh auth setup-git` would add).
-# Set here because ~/.gitconfig is a link to this file.
-[credential "https://github.com"]
-	helper =
-	helper = !gh auth git-credential
-
-[credential "https://gist.github.com"]
-	helper =
-	helper = !gh auth git-credential
-
 [submodule]
 	recurse = true
 
