@@ -51,7 +51,10 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 			if [ -n "$missing_folders" ]; then
 				create_user_folders=$(ask "Create missing user folders (${missing_folders% })?")
 			fi
-			update_macos_defaults=$(ask "Update macOS defaults?")
+			changed_defaults=$(changed_macos_defaults | awk 'NR > 1 { printf ", " } { printf "%s", $0 }')
+			if [ -n "$changed_defaults" ]; then
+				update_macos_defaults=$(ask "Update macOS defaults ($changed_defaults)?")
+			fi
 		elif ! zsh_is_default_shell; then
 			set_default_shell=$(ask "Make zsh your default shell?")
 		fi
@@ -107,9 +110,7 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 			user_folders
 		fi
 		if [ "$update_macos_defaults" = "y" ]; then
-			log "info" "Updating macOS defaults"
 			macos_defaults
-			log "success" "macOS defaults updated"
 		fi
 		load_brew || true
 		if command -v brew >/dev/null 2>&1; then

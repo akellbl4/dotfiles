@@ -773,38 +773,76 @@ setup_node() {
 	log "success" "Bun $(PATH="$HOME/.bun/bin:$PATH" bun --version) installed"
 }
 
+# Desired macOS defaults, one per line: currentHost (y/n)|domain|key|type|value|description
+macos_defaults_list() {
+	cat <<DEFAULTS
+y|-g|AppleFontSmoothing|int|0|Font smoothing off
+n|-g|PMPrintingExpandedStateForPrint|bool|true|Expanded print dialog
+n|com.apple.dock|mineffect|string|scale|Scale effect when minimizing
+n|com.apple.dock|autohide-delay|float|0|Hidden Dock appears instantly
+n|com.apple.dock|autohide-time-modifier|float|0.3|Faster Dock animation
+n|com.apple.dock|show-recents|bool|false|No suggested and recent apps in Dock
+n|com.apple.screencapture|location|string|$HOME/Screenshots|Screenshots saved to ~/Screenshots
+n|com.apple.finder|_FXSortFoldersFirst|bool|true|Folders first in Finder
+n|com.apple.finder|_FXSortFoldersFirstOnDesktop|bool|true|Folders first on the desktop
+DEFAULTS
+}
+
+# True when a default already has the desired value
+macos_default_matches() {
+	if [ "$1" = "y" ]; then
+		current=$(defaults -currentHost read "$2" "$3" 2>/dev/null) || return 1
+	else
+		current=$(defaults read "$2" "$3" 2>/dev/null) || return 1
+	fi
+	case "$4" in
+		# defaults read prints booleans as 1 or 0
+		bool)
+			[ "$5" = "true" ] && wanted=1 || wanted=0
+			[ "$current" = "$wanted" ]
+			;;
+		int|float)
+			awk -v a="$current" -v b="$5" 'BEGIN { exit !(a + 0 == b + 0) }'
+			;;
+		*)
+			[ "$current" = "$5" ]
+			;;
+	esac
+}
+
+# Print the descriptions of defaults that differ from the desired values, one per line
+changed_macos_defaults() {
+	macos_defaults_list | while IFS='|' read -r host domain key type value description; do
+		macos_default_matches "$host" "$domain" "$key" "$type" "$value" || echo "$description"
+	done
+}
+
+# Apply only the defaults that differ, then restart just the affected apps
 macos_defaults() {
-	log "info" "Setting up macOS defaults..."
-	# Disable font smoothing
-	defaults -currentHost write -g AppleFontSmoothing -int 0
+	restart_apps=""
+	changes=$(macos_defaults_list | while IFS='|' read -r host domain key type value description; do
+		macos_default_matches "$host" "$domain" "$key" "$type" "$value" && continue
+		if [ "$host" = "y" ]; then
+			defaults -currentHost write "$domain" "$key" "-$type" "$value"
+		else
+			defaults write "$domain" "$key" "-$type" "$value"
+		fi
+		echo "$domain|$description"
+	done)
 
-	# Change default settings of printing
-	# If your printer support two sides print then it's off by default while you printing
-	defaults write -g PMPrintingExpandedStateForPrint -bool TRUE
+	if [ -z "$changes" ]; then
+		log "info" "macOS defaults already up to date"
+		return 0
+	fi
 
-	# Simple window scale effect
-	defaults write com.apple.dock mineffect -string scale
-
-	# Zero timeout to show hidden Dock
-	defaults write com.apple.dock autohide-delay -float 0
-
-	# Fast Dock showing animation (300ms)
-	defaults write com.apple.dock autohide-time-modifier -float 0.3
-
-	# Don't show suggested and recent apps in Dock
-	defaults write com.apple.dock show-recents -bool false
-
-	# Set default folder for screenshots
-	defaults write com.apple.screencapture location "$HOME/Screenshots"
-
-	# Sort folders on top in Finder
-	defaults write com.apple.finder _FXSortFoldersFirst -boolean TRUE
-	defaults write com.apple.finder _FXSortFoldersFirstOnDesktop -boolean TRUE
-
-	# Restart services
-	killall Dock >/dev/null 2>&1 || true
-	killall SystemUIServer >/dev/null 2>&1 || true
-	killall Finder >/dev/null 2>&1 || true
-
-	log "success" "macOS defaults set"
+	echo "$changes" | while IFS='|' read -r domain description; do
+		log "success" "$description" 1
+	done
+	case "$changes" in *com.apple.dock*) restart_apps="$restart_apps Dock" ;; esac
+	case "$changes" in *com.apple.finder*) restart_apps="$restart_apps Finder" ;; esac
+	case "$changes" in *com.apple.screencapture*) restart_apps="$restart_apps SystemUIServer" ;; esac
+	for app in $restart_apps; do
+		killall "$app" >/dev/null 2>&1 || true
+	done
+	log "success" "macOS defaults updated"
 }

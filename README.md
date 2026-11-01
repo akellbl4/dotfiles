@@ -25,7 +25,7 @@ The script clones this repository into `~/.dotfiles` (or updates it if it is alr
 8. Sets up [Podman](#podman) and makes the `docker` command use it
 9. Links the GPG agent config and sets up a [commit signing key](#gpg)
 
-Running it again is safe. It only asks about folders that are missing and about the default shell while it isn't zsh. It shows your current Git user and signing key and only changes them if you choose to. Press Enter to accept the default shown in capitals (`Y/n` or `y/N`), or to keep the current value shown in brackets.
+Running it again is safe. It only asks about folders that are missing, macOS defaults that differ from your settings, and the default shell while it isn't zsh. It shows your current Git user and signing key and only changes them if you choose to. Press Enter to accept the default shown in capitals (`Y/n` or `y/N`), or to keep the current value shown in brackets.
 
 When there is no terminal to prompt on, the script runs `dotfiles install -y`, which answers yes to everything except the Git user and GPG key questions, since those need your input.
 
@@ -146,7 +146,7 @@ It then links `~/.local/bin/docker` to `podman`, so `docker` commands and script
 
 ### macOS defaults
 
-Set by `macos_defaults` in [`utils.sh`](utils.sh):
+Listed in `macos_defaults_list` in [`utils.sh`](utils.sh). `install` and `update` compare them with your current settings and only offer to apply them when something differs, naming the settings that would change. Only the changed settings are written, and only the affected apps (Dock, Finder, SystemUIServer) are restarted.
 
 - Font smoothing turned off
 - Print dialog expanded by default
