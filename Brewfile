@@ -3,7 +3,8 @@ cask_args appdir: "/Applications", require_sha: true
 
 # Terminal packages
 brew "tig"
-brew "node"
+brew "fnm"                                              # Node version manager, latest LTS is set up by dotfiles
+brew "bun"
 brew "ssh-copy-id"
 brew "gh"
 brew "iperf"

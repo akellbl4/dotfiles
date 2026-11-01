@@ -15,14 +15,15 @@ curl -L https://github.com/akellbl4/dotfiles/raw/main/install.sh | bash
 
 The script clones this repository into `~/.dotfiles` (or updates it if it is already there) and runs `dotfiles install`, so the same command also updates an existing setup. It asks a few questions up front, then:
 
-1. On Linux, installs zsh, git and curl if missing and offers to make zsh your default shell. On Bazzite and Silverblue, missing packages are added with `rpm-ostree`, so reboot and run the installer again.
+1. On Linux, installs zsh, git, curl and unzip if missing and offers to make zsh your default shell. On Bazzite and Silverblue, missing packages are added with `rpm-ostree`, so reboot and run the installer again.
 2. Saves your Git name and email to `src/.gitconfig.user`
 3. Installs [Oh My Zsh](https://ohmyz.sh)
 4. Symlinks the files in `src/` into `~`, `src/custom/` into `~/.oh-my-zsh/custom` and each `src/.config/<app>/` into `~/.config/<app>/`
 5. On macOS, creates `~/Screenshots` and `~/Developer` if they're missing, applies [macOS defaults](#macos-defaults), and installs Homebrew and everything in the [`Brewfile`](Brewfile)
-6. Installs the [AI coding tools](#ai-coding-tools) on Linux (on macOS they come from the `Brewfile`)
-7. Sets up [Podman](#podman) and makes the `docker` command use it
-8. Links the GPG agent config and sets up a [commit signing key](#gpg)
+6. Installs the latest [Node LTS, pnpm and Bun](#node-pnpm-and-bun), and moves to a newer LTS on later runs
+7. Installs the [AI coding tools](#ai-coding-tools) on Linux (on macOS they come from the `Brewfile`)
+8. Sets up [Podman](#podman) and makes the `docker` command use it
+9. Links the GPG agent config and sets up a [commit signing key](#gpg)
 
 Running it again is safe. It only asks about folders that are missing and about the default shell while it isn't zsh. It shows your current Git user and signing key and only changes them if you choose to. Press Enter to accept the default shown in capitals (`Y/n` or `y/N`), or to keep the current value shown in brackets.
 
@@ -42,6 +43,7 @@ The `dotfiles` command is on your `PATH` after install.
 | `dotfiles bundle` | Installs everything in the `Brewfile` |
 | `dotfiles config-user` | Edits your Git name and email |
 | `dotfiles ai-tools` | Installs Claude Code and Codex, plus Cursor and T3 Code on machines with a desktop |
+| `dotfiles node` | Installs the latest Node LTS, pnpm and Bun |
 | `dotfiles podman` | Installs Podman and makes the `docker` command use it |
 | `dotfiles gpg-key` | Picks an existing GPG key or creates a new one for signing commits |
 | `dotfiles help` | Shows usage |
@@ -104,6 +106,16 @@ Some of the aliases:
 
   The chosen key is saved to `.gitconfig.user` and commit signing is turned on. If you're logged in to `gh` and the key isn't on your GitHub account yet, it offers to upload it. Otherwise it prints the public key to add by hand.
 
+### Node, pnpm and Bun
+
+`dotfiles node` (also run by every `install` and `update`) sets up:
+
+- **Node** with [fnm](https://github.com/Schniz/fnm): the latest LTS is installed and set as the default. When a newer LTS comes out, the next `dotfiles update` installs it and makes it the default. In a project with a `.nvmrc` or `.node-version` file, `cd` switches to that version.
+- **pnpm** through Corepack. Node 25 and later no longer include Corepack, so it's installed from npm when missing, then enabled, and the latest pnpm is installed with it.
+- **Bun**
+
+fnm and Bun come from Homebrew on macOS and from their official installers on Linux. fnm goes into `~/.local/bin` and Bun into `~/.bun`. [`node.sh`](node.sh) puts them on your `PATH`, so neither installer edits `~/.zshrc`. If Node was installed with Homebrew before, `brew uninstall node` removes the old copy, since fnm's Node comes first on `PATH` anyway.
+
 ### AI coding tools
 
 `dotfiles ai-tools` installs whichever of these are missing. `install` and `update` offer it on Linux, and on macOS the tools come from the `Brewfile`.
@@ -150,7 +162,7 @@ Set by `macos_defaults` in [`utils.sh`](utils.sh):
 
 ### Homebrew
 
-The [`Brewfile`](Brewfile) covers command-line tools (gh, fzf, tig, gnupg, node, podman and others), Quick Look extensions, apps, AI coding tools and fonts.
+The [`Brewfile`](Brewfile) covers command-line tools (gh, fzf, tig, gnupg, fnm, bun, podman and others), Quick Look extensions, apps, AI coding tools and fonts.
 
 ## Personal settings
 
@@ -172,7 +184,7 @@ utils.sh            Shared helpers: linking, prompts, macOS defaults, GPG setup
 src/                Files linked into ~
 src/custom/         Files linked into ~/.oh-my-zsh/custom
 src/.config/<app>/  Files linked into ~/.config/<app>/ (Ghostty)
-*.sh                Snippets sourced by .zshrc (Homebrew, Oh My Zsh, GPG)
+*.sh                Snippets sourced by .zshrc (Homebrew, Oh My Zsh, Node, GPG)
 Brewfile            Homebrew packages
 gpg-agent.conf      Linked to ~/.gnupg/gpg-agent.conf
 ```

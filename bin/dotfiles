@@ -134,6 +134,8 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		fi
 	fi
 
+	setup_node || log "error" "Node setup didn't finish, see above. Run 'dotfiles node' to retry."
+
 	if [ "$setup_ai_answer" = "y" ] && [ "$(uname)" != "Darwin" ]; then
 		setup_ai_tools || true
 	fi
@@ -197,6 +199,10 @@ if [ "$COMMAND" = "config-user" ]; then
 	log "success" "Git user settings updated."
 fi
 
+if [ "$COMMAND" = "node" ]; then
+	setup_node
+fi
+
 if [ "$COMMAND" = "ai-tools" ]; then
 	setup_ai_tools
 fi
@@ -211,7 +217,7 @@ fi
 
 if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
 	log "" "${BOLD}Usage${RESET}"
-	log "" "dotfiles [install|link|bundle|update|config-user|gpg-key|podman|ai-tools|help]" 1
+	log "" "dotfiles [install|link|bundle|update|config-user|gpg-key|node|podman|ai-tools|help]" 1
 
 	log "" "\n${BOLD}Commands${RESET}"
 	log "" "${BOLD}install${RESET}      📥 Installs the dotfiles, sets up Oh My Zsh, Homebrew, and applies macOS defaults." 2
@@ -221,6 +227,7 @@ if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
 	log "" "${BOLD}config-user${RESET}  🛠️ Sets your Git name and email." 2
 	log "" "${BOLD}gpg-key${RESET}      🔑 Picks an existing GPG key or creates a new one for signing commits." 2
 	log "" "${BOLD}podman${RESET}       🐳 Installs Podman and makes the docker command use it (macOS, Debian, Fedora)." 2
+	log "" "${BOLD}node${RESET}         🟢 Installs the latest Node LTS (via fnm), pnpm (via Corepack) and Bun." 2
 	log "" "${BOLD}ai-tools${RESET}     🤖 Installs Claude Code and Codex, plus Cursor and T3 Code on machines with a desktop." 2
 	log "" "${BOLD}help${RESET}         ❓ Displays usage information for the dotfiles command." 2
 

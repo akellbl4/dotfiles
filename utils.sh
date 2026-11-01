@@ -493,11 +493,14 @@ download() {
 	curl -fL --progress-bar "$1" -o "$2"
 }
 
-# Run a vendor install script with the given shell (downloaded first, so a failed download isn't run)
+# Run a vendor install script with the given shell and arguments (downloaded first, so a failed download isn't run)
 run_install_script() {
+	script_url=$1
+	script_shell=$2
+	shift 2
 	script_file=$(mktemp)
-	if download "$1" "$script_file"; then
-		"$2" "$script_file"
+	if download "$script_url" "$script_file"; then
+		"$script_shell" "$script_file" "$@"
 		script_status=$?
 	else
 		script_status=1
@@ -650,11 +653,11 @@ setup_ai_tools() {
 	fi
 }
 
-# Install zsh, git and curl on Linux if they're missing (macOS ships them)
+# Install zsh, git, curl and unzip on Linux if they're missing (macOS ships them)
 ensure_base_packages() {
 	[ "$(uname)" = "Darwin" ] && return 0
 	missing_packages=""
-	for package in zsh git curl; do
+	for package in zsh git curl unzip; do
 		command -v "$package" >/dev/null 2>&1 || missing_packages="$missing_packages $package"
 	done
 	[ -z "$missing_packages" ] && return 0
@@ -703,6 +706,71 @@ set_zsh_default_shell() {
 	else
 		log "error" "Could not change the default shell. Run: chsh -s $zsh_path"
 	fi
+}
+
+# fnm (Node version manager): Homebrew on macOS, official installer into ~/.local/bin on Linux
+install_fnm() {
+	has_command fnm && return 0
+	log "info" "Installing fnm..."
+	if [ "$(uname)" = "Darwin" ]; then
+		load_brew && brew install fnm
+		return
+	fi
+	# --skip-shell: node.sh sets up the shell, so the installer mustn't edit ~/.zshrc
+	mkdir -p "$HOME/.local/bin"
+	run_install_script https://fnm.vercel.app/install bash --skip-shell --install-dir "$HOME/.local/bin"
+}
+
+bun_installed() {
+	has_command bun || [ -x "$HOME/.bun/bin/bun" ]
+}
+
+install_bun() {
+	bun_installed && return 0
+	log "info" "Installing Bun..."
+	if [ "$(uname)" = "Darwin" ]; then
+		load_brew && brew install bun
+		return
+	fi
+	# The installer appends to ~/.zshrc (part of this repo) for zsh users; with
+	# another SHELL it only prints instructions, and node.sh adds Bun to PATH
+	(
+		SHELL=/bin/sh
+		export SHELL
+		run_install_script https://bun.sh/install bash
+	)
+}
+
+# Latest Node LTS as the default via fnm, Corepack with pnpm, and Bun
+setup_node() {
+	if ! install_fnm; then
+		log "error" "Could not install fnm."
+		return 1
+	fi
+	PATH="$HOME/.local/bin:$PATH"
+	export PATH
+
+	log "info" "Installing the latest Node LTS..."
+	fnm install --lts || return 1
+	fnm default lts-latest || return 1
+	eval "$(fnm env --shell bash)"
+	log "success" "Node $(node --version) is the default"
+
+	# Node 25+ no longer bundles Corepack, so install it from npm when missing
+	COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+	export COREPACK_ENABLE_DOWNLOAD_PROMPT
+	if ! command -v corepack >/dev/null 2>&1; then
+		npm install --global corepack || return 1
+	fi
+	corepack enable || return 1
+	corepack install --global pnpm@latest || return 1
+	log "success" "pnpm $(pnpm --version) enabled through Corepack"
+
+	if ! install_bun; then
+		log "error" "Could not install Bun."
+		return 1
+	fi
+	log "success" "Bun $(PATH="$HOME/.bun/bin:$PATH" bun --version) installed"
 }
 
 macos_defaults() {
