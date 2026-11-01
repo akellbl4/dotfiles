@@ -1,0 +1,31 @@
+#!/bin/sh
+# gh with the token for the repository's owner, taken from -R/--repo, GH_REPO,
+# 'gh repo <command> owner/name', or the origin remote of the current directory.
+# Installed into the agent user's ~/.local/bin by 'dotfiles agent-user'.
+repo=${GH_REPO:-}
+prev=""
+for arg in "$@"; do
+	case "$prev" in -R | --repo) repo=$arg ;; esac
+	case "$arg" in --repo=*) repo=${arg#--repo=} ;; esac
+	prev=$arg
+done
+if [ -z "$repo" ] && [ "${1:-}" = "repo" ]; then
+	case "${3:-}" in */*) repo=$3 ;; esac
+fi
+if [ -z "$repo" ]; then
+	repo=$(git remote get-url origin 2>/dev/null | sed -nE 's#^.*github\.com[:/]+([^/]+/[^/]+)$#\1#p')
+fi
+# owner/name or a github.com URL
+owner=$(printf '%s' "$repo" | sed -E 's#^.*github\.com[:/]+##; s#/.*##')
+
+real_gh=""
+for candidate in /opt/homebrew/bin/gh /usr/local/bin/gh; do
+	[ -x "$candidate" ] && real_gh=$candidate && break
+done
+if [ -z "$real_gh" ]; then
+	echo "gh isn't installed (looked in /opt/homebrew/bin and /usr/local/bin)." >&2
+	exit 127
+fi
+
+token=$("$(dirname "$0")/github-token" "$owner") || exit 1
+GH_TOKEN=$token exec "$real_gh" "$@"

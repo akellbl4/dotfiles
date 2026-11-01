@@ -1,0 +1,16 @@
+#!/bin/sh
+# Print the GitHub token for a repository owner: ~/.config/github-tokens/<owner>,
+# or ~/.config/github-tokens/default when there's no token for that owner.
+# Installed into the agent user's ~/.local/bin by 'dotfiles agent-user'.
+dir="$HOME/.config/github-tokens"
+owner=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')
+# GitHub owners are letters, digits and hyphens; anything else falls back to default
+case "$owner" in *[!a-z0-9-]*) owner="" ;; esac
+for name in $owner default; do
+	if [ -s "$dir/$name" ]; then
+		head -n 1 "$dir/$name"
+		exit 0
+	fi
+done
+echo "No GitHub token for ${owner:-this repository}. Add one with 'dotfiles agent-token <owner|default>'." >&2
+exit 1
