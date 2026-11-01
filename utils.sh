@@ -757,6 +757,32 @@ install_ai_tool() {
 	esac
 }
 
+# T3 Code's CLI launcher, written by the app the first time it opens
+T3_CLI="$HOME/.t3/bin/t3"
+
+t3_service_installed() {
+	"$T3_CLI" status --json 2>/dev/null | tr -d ' \n' | grep -q '"installed":true'
+}
+
+# Run the T3 Code server as a background service (launchd/systemd) so it starts at login
+setup_t3_service() {
+	if [ ! -x "$T3_CLI" ]; then
+		log "error" "T3 Code's t3 command isn't set up. Install T3 Code ('dotfiles ai-tools'), open it once, then try again."
+		return 1
+	fi
+	if t3_service_installed; then
+		log "info" "T3 Code server already starts at login"
+		return 0
+	fi
+	log "info" "Installing the T3 Code background service..."
+	if "$T3_CLI" service install && t3_service_installed; then
+		log "success" "T3 Code server now starts at login"
+	else
+		log "error" "T3 Code service installation failed, see above"
+		return 1
+	fi
+}
+
 # Install Claude Code and Codex everywhere, plus Cursor and T3 Code where there's a desktop
 setup_ai_tools() {
 	missing=$(missing_ai_tools)

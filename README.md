@@ -43,6 +43,7 @@ The `dotfiles` command is on your `PATH` after install.
 | `dotfiles bundle` | Installs everything in the `Brewfile` |
 | `dotfiles config-user` | Edits your Git name and email |
 | `dotfiles ai-tools` | Installs Claude Code and Codex, plus Cursor and T3 Code on machines with a desktop |
+| `dotfiles t3-autostart` | Installs the T3 Code server as a background service so it starts at login (open T3 Code once first) |
 | `dotfiles node` | Installs the latest Node LTS, pnpm and Bun |
 | `dotfiles podman` | Installs Podman and makes the `docker` command use it |
 | `dotfiles macos-vm [name]` | Installs Tart and creates a macOS virtual machine (Apple Silicon only) |
