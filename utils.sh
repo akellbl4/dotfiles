@@ -760,30 +760,47 @@ setup_node() {
 		log "error" "Could not install fnm."
 		return 1
 	fi
-	PATH="$HOME/.local/bin:$PATH"
+	PATH="$HOME/.local/bin:$HOME/.bun/bin:$PATH"
 	export PATH
 
-	log "info" "Installing the latest Node LTS..."
-	fnm install --lts || return 1
-	fnm default lts-latest || return 1
-	eval "$(fnm env --shell bash)"
-	log "success" "Node $(node --version) is the default"
+	# Each step is skipped when it's already up to date, so repeat runs stay quiet
 
-	# Node 25+ no longer bundles Corepack, so install it from npm when missing
+	# Node: only install when the latest LTS isn't there yet (fnm warns on reinstalls)
+	latest_lts=$(fnm ls-remote --lts 2>/dev/null | tail -n 1 | awk '{print $1}')
+	if [ -n "$latest_lts" ] && fnm ls 2>/dev/null | grep -qw -e "$latest_lts"; then
+		fnm default "$latest_lts" || return 1
+	else
+		log "info" "Installing the latest Node LTS${latest_lts:+ ($latest_lts)}..."
+		fnm install --lts || return 1
+		fnm default lts-latest || return 1
+	fi
+	eval "$(fnm env --shell bash)"
+
+	# Corepack: Node 25+ no longer bundles it, so install it from npm when missing,
+	# and enable it (which adds the pnpm command) only when pnpm isn't available
 	COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 	export COREPACK_ENABLE_DOWNLOAD_PROMPT
 	if ! command -v corepack >/dev/null 2>&1; then
+		log "info" "Installing Corepack..."
 		npm install --global corepack || return 1
 	fi
-	corepack enable || return 1
-	corepack install --global pnpm@latest || return 1
-	log "success" "pnpm $(pnpm --version) enabled through Corepack"
+	if ! command -v pnpm >/dev/null 2>&1; then
+		corepack enable || return 1
+	fi
+
+	# pnpm: only install through Corepack when it isn't the latest version
+	latest_pnpm=$(npm view pnpm version 2>/dev/null)
+	if [ -z "$latest_pnpm" ] || [ "$(pnpm --version 2>/dev/null)" != "$latest_pnpm" ]; then
+		log "info" "Installing pnpm${latest_pnpm:+ $latest_pnpm} through Corepack..."
+		corepack install --global pnpm@latest || return 1
+	fi
 
 	if ! install_bun; then
 		log "error" "Could not install Bun."
 		return 1
 	fi
-	log "success" "Bun $(PATH="$HOME/.bun/bin:$PATH" bun --version) installed"
+
+	log "success" "Node $(node --version), pnpm $(pnpm --version) and Bun $(bun --version)"
 }
 
 # Desired macOS defaults, one per line: currentHost (y/n)|domain|key|type|value|description
