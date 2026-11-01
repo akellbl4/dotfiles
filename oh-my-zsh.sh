@@ -1,6 +1,11 @@
 export ZSH="$HOME/.oh-my-zsh"
 
-ZSH_THEME="robbyrussell"
+ZSH_THEME="dotfiles"
+
+# Fall back to the default theme until `dotfiles link` has linked the custom one
+if [[ ! -f "${ZSH_CUSTOM:-$ZSH/custom}/$ZSH_THEME.zsh-theme" ]]; then
+	ZSH_THEME="robbyrussell"
+fi
 
 plugins=(git)
 

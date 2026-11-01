@@ -49,7 +49,15 @@ Updates only fast-forward. If `~/.dotfiles` has commits that aren't on `main`, t
 
 ### Zsh
 
-- `.zshrc` loads Homebrew, Oh My Zsh (`robbyrussell` theme, `git` plugin), the GPG settings and your personal `~/.dotfiles/.zshrc.user.sh`
+- `.zshrc` loads Homebrew, Oh My Zsh (`git` plugin), the GPG settings and your personal `~/.dotfiles/.zshrc.user.sh`
+- A custom two-line prompt, [`src/custom/dotfiles.zsh-theme`](src/custom/dotfiles.zsh-theme):
+
+```
+~/Developer/dotfiles ⌥ main +1 ~2 ?3 ↑1 · 4s · exit 1
+❯
+```
+
+  It shows the directory, the Git branch, and counts of staged (`+`), modified (`~`), untracked (`?`) and conflicted (`!`) files and of commits ahead (`↑`) and behind (`↓`). It also shows how long the last command took when that was 2 seconds or more, and its exit code if it failed. `❯` turns red after a failed command, and `user@host` appears over SSH. It uses only your terminal's colors and characters that JetBrains Mono has, so it needs no extra tools or Nerd Font.
 - [`src/custom/aliases.zsh`](src/custom/aliases.zsh):
 
 | Alias | Action |
