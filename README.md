@@ -13,7 +13,7 @@ My macOS development environment: Zsh with Oh My Zsh, Homebrew packages, Git and
 curl -L https://github.com/akellbl4/dotfiles/raw/main/install.sh | bash
 ```
 
-The script clones this repository into `~/.dotfiles` and runs `dotfiles install`. It asks a few questions up front, then:
+The script clones this repository into `~/.dotfiles` (or updates it if it is already there) and runs `dotfiles install`, so the same command also updates an existing setup. It asks a few questions up front, then:
 
 1. Saves your Git name and email to `src/.gitconfig.user`
 2. Installs [Oh My Zsh](https://ohmyz.sh)
@@ -36,7 +36,7 @@ The `dotfiles` command is on your `PATH` after install.
 | Command | Description |
 | --- | --- |
 | `dotfiles install [-y]` | Full setup, as described above |
-| `dotfiles update [-y]` | Pulls the latest changes and runs the full setup again |
+| `dotfiles update [-y]` | Pulls the latest changes and runs the full setup again through the new `install.sh`, the same as the curl command |
 | `dotfiles link` | Pulls the latest changes and re-creates the symlinks |
 | `dotfiles bundle` | Installs everything in the `Brewfile` |
 | `dotfiles config-user` | Edits your Git name and email |

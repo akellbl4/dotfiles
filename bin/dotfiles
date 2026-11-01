@@ -18,16 +18,16 @@ COMMAND=$1
 CURRENT_DIR=$(pwd)
 
 # Print the title at the start of any command (once, not again after restarting below)
-if [ -z "$DOTFILES_PULLED" ]; then
+if [ -z "$DOTFILES_RESTARTED" ]; then
 	printf "\n%b⚙️  Dotfiles%b\n\n" "$BOLD" "$RESET"
 fi
 
 if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
-	# Pull first and restart with the updated script, so the questions and
-	# steps below always come from the latest version
+	# Pull first, then hand over to the freshly pulled install.sh, so install and
+	# update always run the latest scripts (the same path as the curl installer)
 	if [ -z "$DOTFILES_PULLED" ]; then
 		pull_repo || log "error" "Continuing with the current version."
-		DOTFILES_PULLED=1 exec sh "$DOTFILES_ROOT/bin/dotfiles" "$@"
+		DOTFILES_PULLED=1 DOTFILES_RESTARTED=1 exec sh "$DOTFILES_ROOT/install.sh" "$@"
 	fi
 
 	missing_folders=$(missing_user_folders | tr '\n' ' ')
