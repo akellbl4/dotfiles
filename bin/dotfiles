@@ -3,18 +3,15 @@
 set -e
 set -a
 
-# Source shared variables
-if [ -f "$HOME/.dotfiles/src/variables.sh" ]; then
-	. "$HOME/.dotfiles/src/variables.sh"
-fi
-
 export DOTFILES_ROOT="$HOME/.dotfiles"
 
 if [ ! -d "$DOTFILES_ROOT" ]; then
-	log "error" "Dotfiles not found"
+	printf "\033[31mDotfiles not found at %s. Run install.sh first.\033[0m\n" "$DOTFILES_ROOT" >&2
 	exit 1
 fi
 
+# Source shared variables and helpers
+. "$DOTFILES_ROOT/variables.sh"
 . "$DOTFILES_ROOT/utils.sh"
 
 COMMAND=$1
@@ -24,19 +21,17 @@ CURRENT_DIR=$(pwd)
 printf "\n${BOLD}⚙️  Dotfiles${RESET}\n\n"
 
 if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
-	if [ "$2" != "-y" ]; then
-		printf "Create default user folders? (Y/n) > " >&2
-		read -r create_user_folders
-		create_user_folders=${create_user_folders:-y,,}
-		printf "Update macOS defaults? (Y/n) > " >&2
-		read -r update_macos_defaults
-		update_macos_defaults=${update_macos_defaults:-y,,}
-		printf "Configure Git user settings? (Y/n) > " >&2
-		read -r setup_git_user
-		setup_git_user=${setup_git_user:-y,,}
-		printf "Enable GPG agent and link configuration? (Y/n) > " >&2
-		read -r link_gpg_agent
-		link_gpg_agent=${link_gpg_agent:-y,,}
+	if [ "$2" = "-y" ]; then
+		create_user_folders=y
+		update_macos_defaults=y
+		setup_git_user=n
+		link_gpg_agent=y
+		backup_gpg_agent=y
+	else
+		create_user_folders=$(ask "Create default user folders?")
+		update_macos_defaults=$(ask "Update macOS defaults?")
+		setup_git_user=$(ask "Configure Git user settings?")
+		link_gpg_agent=$(ask "Enable GPG agent and link configuration?")
 	fi
 
 	log "info" "Setting up dotfiles..."
@@ -50,7 +45,7 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		touch "$DOTFILES_ROOT/.zshrc.user.sh"
 	fi
 
-	if [ ! -f "$DOTFILES_ROOT/.zshrc.user.sh" ]; then
+	if [ -f "$DOTFILES_ROOT/.zshrc.user.sh" ]; then
 		chmod +x "$DOTFILES_ROOT/.zshrc.user.sh"
 	fi
 
@@ -72,7 +67,8 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 			macos_defaults
 			log "success" "macOS defaults updated"
 		fi
-		if [ -n "$(brew -v | grep -iE "^homebrew")" ]; then
+		load_brew || true
+		if command -v brew >/dev/null 2>&1; then
 			log "info" "Updating Homebrew"
 			brew update
 			brew bundle --file="$DOTFILES_ROOT/Brewfile" --quiet --upgrade
@@ -80,11 +76,9 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 			log "success" "Homebrew updated with all packages"
 		else
 			log "info" "Installing Homebrew"
-			/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-			if [ $? -ne 0 ]; then
+			if ! /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || ! load_brew; then
 				log "error" "Homebrew installation failed"
 			else
-				. "$DOTFILES_ROOT/src/.zshrc"
 				log "success" "Homebrew installed"
 				brew bundle --file="$DOTFILES_ROOT/Brewfile" --quiet
 			fi
@@ -92,19 +86,24 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 	fi
 
 	if [ "$link_gpg_agent" = "y" ]; then
-		if [ -f "$HOME/.gnupg/gpg-agent.conf" ]; then
-			read -r "gpg-agent.conf already exists. Do you want to backup it? (Y/n): " backup_gpg_agent
-			backup_gpg_agent=${backup_gpg_agent:-y,,}
+		mkdir -p "$HOME/.gnupg"
+		chmod 700 "$HOME/.gnupg"
+		if [ -f "$HOME/.gnupg/gpg-agent.conf" ] && [ ! -L "$HOME/.gnupg/gpg-agent.conf" ]; then
+			if [ -z "$backup_gpg_agent" ]; then
+				backup_gpg_agent=$(ask "gpg-agent.conf already exists. Back it up?")
+			fi
+			if [ "$backup_gpg_agent" = "y" ]; then
+				log "info" "Backing up existing gpg-agent.conf"
+				mv "$HOME/.gnupg/gpg-agent.conf" "$HOME/.gnupg/gpg-agent.conf.$(date "+%Y%m%d%H%M%S").bak"
+				log "success" "gpg-agent.conf backed up successfully."
+			else
+				log "info" "Keeping existing gpg-agent.conf."
+			fi
 		fi
-		if [ "$backup_gpg_agent" = "y" ]; then
-			log "info" "Backing up existing gpg-agent.conf"
-			mv "$HOME/.gnupg/gpg-agent.conf" "$HOME/.gnupg/gpg-agent.conf.$(date "+%Y%m%d%H%M%S").bak"
-			log "success" "gpg-agent.conf backed up successfully."
-		else
-			log "info" "Skipping backup of gpg-agent.conf."
+		if [ ! -e "$HOME/.gnupg/gpg-agent.conf" ] || [ -L "$HOME/.gnupg/gpg-agent.conf" ]; then
+			ln -sfv "$DOTFILES_ROOT/gpg-agent.conf" "$HOME/.gnupg/gpg-agent.conf"
+			log "success" "gpg-agent.conf linked successfully."
 		fi
-		ln -sv "$DOTFILES_ROOT/src/gpg-agent.conf" "$HOME/.gnupg/gpg-agent.conf"
-		log "success" "gpg-agent.conf linked successfully."
 	fi
 
 	if [ "$COMMAND" = "install" ]; then
@@ -121,9 +120,8 @@ fi
 if [ "$COMMAND" = "link" ]; then
 	log "info" "Linking dotfiles..."
 	dotfiles
-	. "$HOME/.zshrc"
 	cd "$CURRENT_DIR"
-	log "success" "Dotfiles linked"
+	log "success" "Dotfiles linked. Run 'reload' or open a new shell to apply."
 fi
 
 if [ "$COMMAND" = "bundle" ]; then

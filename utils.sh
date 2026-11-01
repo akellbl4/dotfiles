@@ -41,11 +41,32 @@ log() {
         prefix="$(printf ' %.0s' $(seq 1 $indent))"
     fi
 
-    printf "${prefix}${style}${message}${RESET}\n"
+    printf "%b\n" "${prefix}${style}${message}${RESET}"
+}
+
+# Prompt a yes/no question (default yes) and print "y" or "n"
+ask() {
+	printf "%s (Y/n) > " "$1" >&2
+	read -r answer || answer=""
+	case "$answer" in
+		[nN]*) echo "n" ;;
+		*) echo "y" ;;
+	esac
+}
+
+# Put brew on PATH for this shell, wherever it is installed
+load_brew() {
+	for brew_bin in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+		if [ -x "$brew_bin" ]; then
+			eval "$("$brew_bin" shellenv)"
+			return 0
+		fi
+	done
+	command -v brew >/dev/null 2>&1
 }
 
 dotfiles() {
-	if [[ -d $DOTFILES_ROOT ]]; then
+	if [ -d "$DOTFILES_ROOT/.git" ]; then
 		log "info" "Updating dotfiles..."
 		cd "$DOTFILES_ROOT" || exit
 		git pull origin main
@@ -65,9 +86,11 @@ link_files() {
 	target_dir=$2
 	name=$3
 
-	if [[ ! -d $src_dir ]]; then
+	if [ ! -d "$src_dir" ]; then
 		log "error" "$name directory not found"
+		return 1
 	fi
+	mkdir -p "$target_dir"
 
 	log "info" "Linking $name..."
 	# read files from source directory avoiding subdirectories
@@ -75,12 +98,12 @@ link_files() {
 		target_file="$target_dir/$(basename "$source_file")"
 
 		# if target file exists, backup it
-		if [[ -f $target_file ]]; then
+		if [ -f "$target_file" ] && [ ! -L "$target_file" ]; then
 			mv "$target_file" "$target_file.$(date "+%Y%m%d%H%M%S").bak" > /dev/null 2>&1
 		fi
 
 		# if target file is a symbolic link, remove it
-		if [[ -L $target_file ]]; then
+		if [ -L "$target_file" ]; then
 			rm -rf "$target_file" > /dev/null 2>&1
 		fi
 
@@ -91,29 +114,32 @@ link_files() {
 
 configure_git_user() {
     log "info" "Configuring Git user settings..."
-    read -p "Enter your full name (or press Enter to skip): " full_name
-    read -p "Enter your email (or press Enter to skip): " email
-    read -p "Enter your GPG signing key (or press Enter to skip): " signing_key
+    printf "Enter your full name (or press Enter to skip): " >&2
+    read -r full_name || full_name=""
+    printf "Enter your email (or press Enter to skip): " >&2
+    read -r email || email=""
+    printf "Enter your GPG signing key (or press Enter to skip): " >&2
+    read -r signing_key || signing_key=""
 
     # Create or update src/.gitconfig.user
     echo "[user]" > "$DOTFILES_ROOT/src/.gitconfig.user"
-    [ -n "$full_name" ] && echo "\tname = $full_name" >> "$DOTFILES_ROOT/src/.gitconfig.user"
-    [ -n "$email" ] && echo "\temail = $email" >> "$DOTFILES_ROOT/src/.gitconfig.user"
-    [ -n "$signing_key" ] && echo "\tsigningkey = $signing_key" >> "$DOTFILES_ROOT/src/.gitconfig.user"
+    if [ -n "$full_name" ]; then printf "\tname = %s\n" "$full_name" >> "$DOTFILES_ROOT/src/.gitconfig.user"; fi
+    if [ -n "$email" ]; then printf "\temail = %s\n" "$email" >> "$DOTFILES_ROOT/src/.gitconfig.user"; fi
+    if [ -n "$signing_key" ]; then printf "\tsigningkey = %s\n" "$signing_key" >> "$DOTFILES_ROOT/src/.gitconfig.user"; fi
 
     log "info" "Git user settings configured."
 }
 
 user_folders() {
 	log "info" "Creating user folders..."
-	if [[ ! -d ~/Screenshots ]]; then
+	if [ ! -d "$HOME/Screenshots" ]; then
 		mkdir ~/Screenshots;
 		log "success" "$HOME/Screenshots folder created"
 	else
 		log "info" "Screenshots folder already exists"
 	fi
 
-	if [[ ! -d ~/Developer ]]; then
+	if [ ! -d "$HOME/Developer" ]; then
 		mkdir ~/Developer;
 		log "success" "$HOME/Developer folder created"
 	else
@@ -153,9 +179,9 @@ macos_defaults() {
 	defaults write com.apple.finder _FXSortFoldersFirstOnDesktop -boolean TRUE
 
 	# Restart services
-	killall Dock;
-	killall SystemUIServer;
-	killall Finder;
+	killall Dock >/dev/null 2>&1 || true
+	killall SystemUIServer >/dev/null 2>&1 || true
+	killall Finder >/dev/null 2>&1 || true
 
 	log "success" "macOS defaults set"
 }
