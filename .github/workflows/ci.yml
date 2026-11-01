@@ -31,3 +31,4 @@ jobs:
           test -L "$HOME/.oh-my-zsh/custom/aliases.zsh"
           test -L "$HOME/.config/ghostty/config.ghostty"
           test "$(git config --global core.excludesfile)" = "~/.gitignore_global"
+          test "$(ssh -G github.com | awk '$1 == "addkeystoagent" {print $2}')" = "14400"

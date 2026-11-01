@@ -94,6 +94,29 @@ link_all() {
 	# purpose: tools that read several of them would load each skill twice.
 	link_skills "$HOME/.agents/skills" "Agent skills"
 	link_skills "$HOME/.claude/skills" "Claude Code skills"
+	link_ssh_config
+}
+
+# Include ssh.conf at the end of ~/.ssh/config, so its defaults apply to every host
+# without replacing your own host entries. `Match all` ends any Host block above it.
+link_ssh_config() {
+	ssh_config="$HOME/.ssh/config"
+	include_line="Include $DOTFILES_ROOT/ssh.conf"
+
+	mkdir -p "$HOME/.ssh"
+	chmod 700 "$HOME/.ssh"
+	if [ -f "$ssh_config" ] && grep -qxF "$include_line" "$ssh_config"; then
+		return 0
+	fi
+	log "info" "Adding the dotfiles SSH config to ~/.ssh/config..."
+	# Leave a blank line after existing entries, which may not end with a newline
+	if [ -s "$ssh_config" ]; then
+		[ -n "$(tail -c 1 "$ssh_config")" ] && echo >>"$ssh_config"
+		echo >>"$ssh_config"
+	fi
+	printf '# Added by dotfiles\nMatch all\n%s\n' "$include_line" >>"$ssh_config"
+	chmod 600 "$ssh_config"
+	log "success" "SSH config included"
 }
 
 # Link each folder in skills/ into an agent's skills folder as a whole-folder

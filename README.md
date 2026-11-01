@@ -115,6 +115,10 @@ Some of the aliases:
 
   The chosen key is saved to `.gitconfig.user` and commit signing is turned on. If you're logged in to `gh` and the key isn't on your GitHub account yet, it offers to upload it. Otherwise it prints the public key to add by hand.
 
+### SSH
+
+[`ssh.conf`](ssh.conf) adds every key ssh uses to the agent for 4 hours, so you type a key's passphrase once and `git push` stops asking until it expires. `dotfiles link` (also run by `install` and `update`) includes it at the end of `~/.ssh/config`, creating the file if needed, so host entries you add there take precedence.
+
 ### Node, pnpm and Bun
 
 `dotfiles node` (also run by every `install` and `update`) sets up:
@@ -235,6 +239,7 @@ skills/<name>/      Agent skills linked into ~/.agents/skills/ and ~/.claude/ski
 *.sh                Snippets sourced by .zshrc (Homebrew, Oh My Zsh, Node, GPG)
 Brewfile            Homebrew packages
 gpg-agent.conf      Linked to ~/.gnupg/gpg-agent.conf
+ssh.conf            Included from ~/.ssh/config
 ```
 
 CI runs shellcheck on the scripts and tests `dotfiles link` on macOS for every push and pull request.
