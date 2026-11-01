@@ -27,5 +27,11 @@ cask "protonvpn"
 cask "hiddenbar"
 cask "fluor"                                           # enable fn keys per application https://github.com/Pyroh/Fluor
 
+# AI coding tools
+cask "claude-code"
+cask "codex"
+cask "cursor"
+cask "t3-code"
+
 # Fonts
 cask "font-jetbrains-mono"

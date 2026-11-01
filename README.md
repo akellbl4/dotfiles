@@ -21,8 +21,9 @@ The script clones this repository into `~/.dotfiles` (or updates it if it is alr
 4. Creates `~/Screenshots` and `~/Developer` if they're missing
 5. Applies [macOS defaults](#macos-defaults)
 6. Installs Homebrew and everything in the [`Brewfile`](Brewfile)
-7. Sets up [Podman](#podman) and makes the `docker` command use it
-8. Links the GPG agent config and sets up a [commit signing key](#gpg)
+7. Installs the [AI coding tools](#ai-coding-tools) on Linux (on macOS they come from the `Brewfile`)
+8. Sets up [Podman](#podman) and makes the `docker` command use it
+9. Links the GPG agent config and sets up a [commit signing key](#gpg)
 
 Running it again is safe. It only asks about folders that are missing, shows your current Git user and signing key and only changes them if you choose to. Press Enter to accept the default shown in capitals (`Y/n` or `y/N`), or to keep the current value shown in brackets.
 
@@ -41,6 +42,7 @@ The `dotfiles` command is on your `PATH` after install.
 | `dotfiles link` | Pulls the latest changes and re-creates the symlinks |
 | `dotfiles bundle` | Installs everything in the `Brewfile` |
 | `dotfiles config-user` | Edits your Git name and email |
+| `dotfiles ai-tools` | Installs Claude Code and Codex, plus Cursor and T3 Code on machines with a desktop |
 | `dotfiles podman` | Installs Podman and makes the `docker` command use it |
 | `dotfiles gpg-key` | Picks an existing GPG key or creates a new one for signing commits |
 | `dotfiles help` | Shows usage |
@@ -103,6 +105,21 @@ Some of the aliases:
 
   The chosen key is saved to `.gitconfig.user` and commit signing is turned on. If you're logged in to `gh` and the key isn't on your GitHub account yet, it offers to upload it. Otherwise it prints the public key to add by hand.
 
+### AI coding tools
+
+`dotfiles ai-tools` installs whichever of these are missing. `install` and `update` offer it on Linux, and on macOS the tools come from the `Brewfile`.
+
+| Tool | macOS | Debian, Ubuntu | Fedora, Asahi | Bazzite, Silverblue |
+| --- | --- | --- | --- | --- |
+| Claude Code (`claude`) | `claude-code` cask | [Official installer](https://claude.ai/install.sh) | Official installer | Official installer |
+| Codex (`codex`) | `codex` cask | [Official installer](https://chatgpt.com/codex/install.sh) | Official installer | Official installer |
+| Cursor (`cursor`) | `cursor` cask | `.deb` | `.rpm` | AppImage |
+| T3 Code (`t3code`) | `t3-code` cask | `.deb` | AppImage | AppImage |
+
+- Cursor and T3 Code are desktop apps, so on Linux they're only installed when the machine has a desktop.
+- The official installers and AppImages go into `~/.local/bin`, and AppImages also get an app menu entry.
+- Both x64 and arm64 are supported.
+
 ### Podman
 
 `dotfiles podman` (also offered by `install` and `update` until it's set up) works on macOS, Debian/Ubuntu and Fedora, including Asahi and Bazzite:
@@ -134,7 +151,7 @@ Set by `macos_defaults` in [`utils.sh`](utils.sh):
 
 ### Homebrew
 
-The [`Brewfile`](Brewfile) covers command-line tools (gh, fzf, tig, gnupg, node and others), Quick Look extensions, apps and fonts.
+The [`Brewfile`](Brewfile) covers command-line tools (gh, fzf, tig, gnupg, node, podman and others), Quick Look extensions, apps, AI coding tools and fonts.
 
 ## Personal settings
 

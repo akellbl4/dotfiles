@@ -40,6 +40,7 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		link_gpg_agent=y
 		backup_gpg_agent=y
 		setup_podman_answer=y
+		setup_ai_answer=y
 	else
 		create_user_folders=n
 		if [ -n "$missing_folders" ]; then
@@ -55,6 +56,12 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 		setup_podman_answer=n
 		if ! podman_ready; then
 			setup_podman_answer=$(ask "Set up Podman and make the docker command use it?")
+		fi
+		# On macOS the AI tools come from the Brewfile, so only ask on Linux
+		setup_ai_answer=n
+		missing_ai=$(missing_ai_tools)
+		if [ "$(uname)" != "Darwin" ] && [ -n "$missing_ai" ]; then
+			setup_ai_answer=$(ask "Install AI coding tools (${missing_ai% })?")
 		fi
 	fi
 
@@ -108,6 +115,10 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 				fi
 			fi
 		fi
+	fi
+
+	if [ "$setup_ai_answer" = "y" ] && [ "$(uname)" != "Darwin" ]; then
+		setup_ai_tools || true
 	fi
 
 	if [ "$setup_podman_answer" = "y" ] && ! podman_ready; then
@@ -169,6 +180,10 @@ if [ "$COMMAND" = "config-user" ]; then
 	log "success" "Git user settings updated."
 fi
 
+if [ "$COMMAND" = "ai-tools" ]; then
+	setup_ai_tools
+fi
+
 if [ "$COMMAND" = "podman" ]; then
 	setup_podman
 fi
@@ -179,7 +194,7 @@ fi
 
 if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
 	log "" "${BOLD}Usage${RESET}"
-	log "" "dotfiles [install|link|bundle|update|config-user|gpg-key|podman|help]" 1
+	log "" "dotfiles [install|link|bundle|update|config-user|gpg-key|podman|ai-tools|help]" 1
 
 	log "" "\n${BOLD}Commands${RESET}"
 	log "" "${BOLD}install${RESET}      📥 Installs the dotfiles, sets up Oh My Zsh, Homebrew, and applies macOS defaults." 2
@@ -189,6 +204,7 @@ if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
 	log "" "${BOLD}config-user${RESET}  🛠️ Sets your Git name and email." 2
 	log "" "${BOLD}gpg-key${RESET}      🔑 Picks an existing GPG key or creates a new one for signing commits." 2
 	log "" "${BOLD}podman${RESET}       🐳 Installs Podman and makes the docker command use it (macOS, Debian, Fedora)." 2
+	log "" "${BOLD}ai-tools${RESET}     🤖 Installs Claude Code and Codex, plus Cursor and T3 Code on machines with a desktop." 2
 	log "" "${BOLD}help${RESET}         ❓ Displays usage information for the dotfiles command." 2
 
 	log "success" "\nEnjoy managing your development environment with Dotfiles!\n"

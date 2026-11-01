@@ -452,6 +452,192 @@ setup_podman() {
 	link_docker_to_podman
 }
 
+# True when a command exists, also looking in ~/.local/bin where many tools install
+has_command() {
+	(
+		PATH="$HOME/.local/bin:$PATH"
+		command -v "$1" >/dev/null 2>&1
+	)
+}
+
+# True when this machine has a desktop (always on macOS)
+has_gui() {
+	[ "$(uname)" = "Darwin" ] && return 0
+	[ -n "$DISPLAY$WAYLAND_DISPLAY" ] && return 0
+	[ "$(systemctl get-default 2>/dev/null)" = "graphical.target" ]
+}
+
+# CPU architecture as x64 or arm64
+cpu_arch() {
+	case "$(uname -m)" in
+		x86_64|amd64) echo "x64" ;;
+		aarch64|arm64) echo "arm64" ;;
+		*) echo "unsupported" ;;
+	esac
+}
+
+# Download a URL to a file, following redirects
+download() {
+	curl -fL --progress-bar "$1" -o "$2"
+}
+
+# Run a vendor install script with the given shell (downloaded first, so a failed download isn't run)
+run_install_script() {
+	script_file=$(mktemp)
+	if download "$1" "$script_file"; then
+		"$2" "$script_file"
+		script_status=$?
+	else
+		script_status=1
+	fi
+	rm -f "$script_file"
+	return $script_status
+}
+
+# Install an AppImage as ~/.local/bin/<name> with an app menu entry
+install_appimage() {
+	appimage_name=$1
+	appimage_url=$2
+	appimage_title=$3
+	mkdir -p "$HOME/.local/bin" "$HOME/.local/share/applications"
+	appimage_tmp=$(mktemp)
+	if ! download "$appimage_url" "$appimage_tmp"; then
+		rm -f "$appimage_tmp"
+		return 1
+	fi
+	chmod +x "$appimage_tmp"
+	mv "$appimage_tmp" "$HOME/.local/bin/$appimage_name"
+	cat > "$HOME/.local/share/applications/$appimage_name.desktop" <<DESKTOP
+[Desktop Entry]
+Type=Application
+Name=$appimage_title
+Exec=$HOME/.local/bin/$appimage_name %U
+Terminal=false
+Categories=Development;
+DESKTOP
+}
+
+# URL of the latest GitHub release asset whose name matches a pattern
+github_release_asset() {
+	curl -fsSL "https://api.github.com/repos/$1/releases/latest" \
+		| grep -o '"browser_download_url": *"[^"]*"' \
+		| sed 's/.*"\(https[^"]*\)"/\1/' \
+		| grep -E -e "$2" | head -n 1
+}
+
+# AI coding tools for this machine: CLIs everywhere, desktop apps only where there's a GUI
+ai_tools() {
+	echo "claude codex"
+	if has_gui; then
+		echo "cursor t3code"
+	fi
+}
+
+# Homebrew cask for each tool on macOS
+ai_tool_cask() {
+	case "$1" in
+		claude) echo "claude-code" ;;
+		t3code) echo "t3-code" ;;
+		*) echo "$1" ;;
+	esac
+}
+
+ai_tool_installed() {
+	if [ "$(uname)" = "Darwin" ]; then
+		load_brew >/dev/null 2>&1 && brew list --cask "$(ai_tool_cask "$1")" >/dev/null 2>&1
+	else
+		has_command "$1"
+	fi
+}
+
+# Print the AI tools that aren't installed yet, space separated
+missing_ai_tools() {
+	for tool in $(ai_tools); do
+		ai_tool_installed "$tool" || printf "%s " "$tool"
+	done
+}
+
+install_cursor_linux() {
+	cursor_base="https://api2.cursor.sh/updates/download/golden/linux-$(cpu_arch)"
+	case "$(linux_family)" in
+		debian)
+			package_file="$(mktemp -d)/cursor.deb"
+			download "$cursor_base-deb/cursor/latest" "$package_file" && sudo apt-get install -y "$package_file"
+			;;
+		fedora)
+			package_file="$(mktemp -d)/cursor.rpm"
+			download "$cursor_base-rpm/cursor/latest" "$package_file" && sudo dnf install -y "$package_file"
+			;;
+		*)
+			install_appimage cursor "$cursor_base/cursor/latest" "Cursor"
+			;;
+	esac
+}
+
+install_t3code_linux() {
+	if [ "$(linux_family)" = "debian" ]; then
+		deb_arch=amd64
+		[ "$(cpu_arch)" = "arm64" ] && deb_arch=arm64
+		t3_url=$(github_release_asset pingdotgg/t3code "-${deb_arch}\.deb$")
+		[ -n "$t3_url" ] || return 1
+		package_file="$(mktemp -d)/t3code.deb"
+		download "$t3_url" "$package_file" && sudo apt-get install -y "$package_file"
+	else
+		appimage_arch=x86_64
+		[ "$(cpu_arch)" = "arm64" ] && appimage_arch=arm64
+		t3_url=$(github_release_asset pingdotgg/t3code "-${appimage_arch}\.AppImage$")
+		[ -n "$t3_url" ] || return 1
+		install_appimage t3code "$t3_url" "T3 Code"
+	fi
+}
+
+install_ai_tool() {
+	if [ "$(uname)" = "Darwin" ]; then
+		if ! load_brew; then
+			log "error" "Homebrew is required to install $1 on macOS."
+			return 1
+		fi
+		brew install --cask "$(ai_tool_cask "$1")"
+		return
+	fi
+	if [ "$(cpu_arch)" = "unsupported" ]; then
+		log "error" "Unsupported CPU architecture $(uname -m) for $1."
+		return 1
+	fi
+	# The vendor installers put binaries in ~/.local/bin and only prompt when it isn't on PATH
+	PATH="$HOME/.local/bin:$PATH"
+	export PATH
+	case "$1" in
+		claude) run_install_script https://claude.ai/install.sh bash ;;
+		codex) run_install_script https://chatgpt.com/codex/install.sh sh ;;
+		cursor) install_cursor_linux ;;
+		t3code) install_t3code_linux ;;
+	esac
+}
+
+# Install Claude Code and Codex everywhere, plus Cursor and T3 Code where there's a desktop
+setup_ai_tools() {
+	missing=$(missing_ai_tools)
+	if [ -z "$missing" ]; then
+		log "info" "AI tools already installed: $(ai_tools | tr '\n' ' ')"
+		return 0
+	fi
+	failed=""
+	for tool in $missing; do
+		log "info" "Installing $tool..."
+		if install_ai_tool "$tool" && ai_tool_installed "$tool"; then
+			log "success" "$tool installed"
+		else
+			log "error" "$tool installation failed, see above"
+			failed="$failed $tool"
+		fi
+	done
+	if [ -n "$failed" ]; then
+		log "error" "Not installed:$failed. Run 'dotfiles ai-tools' to retry."
+		return 1
+	fi
+}
+
 macos_defaults() {
 	log "info" "Setting up macOS defaults..."
 	# Disable font smoothing
