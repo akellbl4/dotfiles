@@ -21,6 +21,7 @@ cask "syntax-highlight"                                 # Code Syntax Highlight 
 # Applications
 cask "raycast"
 cask "ghostty"
+cask "hammerspoon" # Caps Lock input switching over Universal Control, see src/.config/hammerspoon/init.lua
 cask "ungoogled-chromium"
 cask "spotify", args: { require_sha: false }
 cask "figma"

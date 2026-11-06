@@ -238,10 +238,17 @@ Listed in `macos_defaults_list` in [`utils.sh`](utils.sh). `install` and `update
 - Folders listed first in Finder and on the desktop
 - Wi-Fi and Spotlight hidden from the menu bar
 - Spotlight's ⌘Space shortcut turned off, so it's free for Raycast. Raycast keeps its hotkey in its own settings, so set it once in Raycast → Settings → General → Raycast Hotkey (or during Raycast's onboarding on a new Mac).
+- Hammerspoon reads its config from `~/.config/hammerspoon/init.lua` (see [Hammerspoon](#hammerspoon))
 
 ### Ghostty
 
 [`src/.config/ghostty/config.ghostty`](src/.config/ghostty/config.ghostty) is linked to `~/.config/ghostty/config.ghostty`, which Ghostty loads on startup. It sets JetBrains Mono as the font and turns on `ssh-env`, so `ssh` sends `TERM=xterm-256color` instead of `xterm-ghostty` (remote hosts without Ghostty's terminfo then work).
+
+### Hammerspoon
+
+[`src/.config/hammerspoon/init.lua`](src/.config/hammerspoon/init.lua) is linked to `~/.config/hammerspoon/init.lua`, and a [macOS default](#macos-defaults) points Hammerspoon there instead of `~/.hammerspoon`. It starts Hammerspoon at login and makes Caps Lock switch the input source when you type on another Mac's keyboard through Universal Control. macOS only does that for keyboards attached to the Mac, so over Universal Control Caps Lock just toggles caps. The script toggles between U.S. and the last other input source, like the built-in switch, and turns caps back off. Presses on this Mac's own keyboard are left to macOS.
+
+After the first install, open Hammerspoon and allow it in System Settings → Privacy & Security → Accessibility. To check which events it sees, set `DEBUG = true` in the script, reload the config, and watch the Hammerspoon console.
 
 ### Homebrew
 
@@ -268,7 +275,7 @@ agent-user.sh       The agent user: account, git setup, T3 Code LaunchDaemon, to
 agent/              Scripts installed into the agent user's ~/.local/bin
 src/                Files linked into ~
 src/custom/         Files linked into ~/.oh-my-zsh/custom
-src/.config/<app>/  Files linked into ~/.config/<app>/ (Ghostty)
+src/.config/<app>/  Files linked into ~/.config/<app>/ (Ghostty, Hammerspoon)
 skills/<name>/      Agent skills linked into ~/.agents/skills/ and ~/.claude/skills/
 *.sh                Snippets sourced by .zshrc (Homebrew, Oh My Zsh, Node, GPG)
 Brewfile            Homebrew packages
