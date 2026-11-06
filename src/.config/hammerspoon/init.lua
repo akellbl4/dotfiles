@@ -8,10 +8,11 @@ hs.autoLaunch(true)
 --
 -- macOS only switches the input source on Caps Lock ("Use Caps Lock to switch to and
 -- from U.S.") for keyboards attached to this Mac. Through Universal Control, Caps Lock
--- on the other Mac's keyboard doesn't arrive as the Caps Lock key (key code 57): it
--- arrives as a modifier change with key code 255 that turns caps on (and turns it off
--- again shortly after). This switches the input source whenever caps turns on without
--- the Caps Lock key, and turns caps back off. A real Caps Lock key is left to macOS.
+-- on the other Mac's keyboard doesn't arrive as the Caps Lock key (key code 57): each
+-- press arrives as two blips, one when the key goes down and one when it comes up, each
+-- a modifier change with key code 255 that turns caps on and then off within a few
+-- milliseconds. This switches the input source on the key-down blip, skips the key-up
+-- one, and makes sure caps ends up off. A real Caps Lock key is left to macOS.
 
 local LATIN = "com.apple.keylayout.US" -- the source Caps Lock switches to and from
 local DEBUG = false -- print each modifier change to the Hammerspoon console
@@ -35,6 +36,9 @@ hs.keycodes.inputSourceChanged(function()
 end)
 
 local capsWasOn = false
+local keyIsDown = false -- the last blip was a key going down, so the next one is it coming up
+local lastBlip = 0
+local MAX_HOLD = 3 -- seconds; after this, the next blip counts as a new press (so a missed blip can't leave it out of step)
 
 capsLockTap = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, function(event)
   local keyCode = event:getKeyCode()
@@ -51,6 +55,13 @@ capsLockTap = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, function
   capsWasOn = capsOn
   if not turnedOn then return false end
   if keyCode == hs.keycodes.map.capslock then return false end -- a real Caps Lock key: macOS handles it
+
+  local now = hs.timer.secondsSinceEpoch()
+  local keyComingUp = keyIsDown and now - lastBlip < MAX_HOLD
+  keyIsDown = not keyComingUp
+  lastBlip = now
+  if DEBUG then print(keyComingUp and "  key up: skipped" or "  key down: switching") end
+  if keyComingUp then return false end
 
   local target = hs.keycodes.currentSourceID() == LATIN and otherSource() or LATIN
   if target then hs.keycodes.currentSourceID(target) end
