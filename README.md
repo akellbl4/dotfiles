@@ -248,7 +248,7 @@ Listed in `macos_defaults_list` in [`utils.sh`](utils.sh). `install` and `update
 
 [`src/.config/hammerspoon/init.lua`](src/.config/hammerspoon/init.lua) is linked to `~/.config/hammerspoon/init.lua`, and a [macOS default](#macos-defaults) points Hammerspoon there instead of `~/.hammerspoon`. It starts Hammerspoon at login and makes Caps Lock switch the input source when you type on another Mac's keyboard through Universal Control. macOS only does that for keyboards attached to the Mac, so over Universal Control Caps Lock just toggles caps. The script toggles between U.S. and the last other input source, like the built-in switch, and turns caps back off. Presses on this Mac's own keyboard are left to macOS.
 
-After the first install, open Hammerspoon and allow it in System Settings → Privacy & Security → Accessibility. To check which events it sees, set `DEBUG = true` in the script, reload the config, and watch the Hammerspoon console.
+Homebrew installs Hammerspoon without opening it, so `install`, `update` and `bundle` start it when it isn't running. The first time, allow it in System Settings → Privacy & Security → Accessibility, then quit and reopen Hammerspoon: until then it can't see key presses. To check which events it sees, set `DEBUG = true` in the script, reload the config, and watch the Hammerspoon console.
 
 ### Homebrew
 

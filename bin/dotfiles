@@ -173,6 +173,7 @@ if [ "$COMMAND" = "install" ] || [ "$COMMAND" = "update" ]; then
 				fi
 			fi
 		fi
+		start_hammerspoon
 	fi
 
 	setup_node || log "error" "Node setup didn't finish, see above. Run 'dotfiles node' to retry."
@@ -245,6 +246,7 @@ if [ "$COMMAND" = "bundle" ]; then
 	load_brew
 	brew bundle install --file="$DOTFILES_ROOT/Brewfile"
 	log "success" "Homebrew packages installed"
+	start_hammerspoon
 fi
 
 if [ "$COMMAND" = "config-user" ]; then
