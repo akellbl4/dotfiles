@@ -52,6 +52,7 @@ The `dotfiles` command is on your `PATH` after install.
 | `dotfiles macos-vm [name]` | Installs Tart and creates a macOS virtual machine (Apple Silicon only) |
 | `dotfiles gh` | Installs the GitHub CLI |
 | `dotfiles gpg-key` | Picks an existing GPG key or creates a new one for signing commits |
+| `dotfiles capslock [off]` | Makes Caps Lock switch the input source on this Mac's keyboards, also over Universal Control (see [Hammerspoon](#hammerspoon)) |
 | `dotfiles help` | Shows usage |
 
 `dotfiles` is also a small zsh function ([`src/custom/functions.zsh`](src/custom/functions.zsh)): after `install`, `update` and `link` it reloads `~/.zshrc` in your current shell, so changes apply right away without opening a new one.
@@ -246,9 +247,11 @@ Listed in `macos_defaults_list` in [`utils.sh`](utils.sh). `install` and `update
 
 ### Hammerspoon
 
-[`src/.config/hammerspoon/init.lua`](src/.config/hammerspoon/init.lua) is linked to `~/.config/hammerspoon/init.lua`, and a [macOS default](#macos-defaults) points Hammerspoon there instead of `~/.hammerspoon`. It starts Hammerspoon at login and makes Caps Lock switch the input source when you type on another Mac's keyboard through Universal Control. macOS only does that for keyboards attached to the Mac: over Universal Control, Caps Lock arrives as a modifier change with key code 255 instead of the Caps Lock key (57), so it just toggles caps. When caps turns on without the Caps Lock key, the script toggles between U.S. and the last other input source, like the built-in switch, and turns caps back off. A real Caps Lock key is left to macOS.
+[`src/.config/hammerspoon/init.lua`](src/.config/hammerspoon/init.lua) is linked to `~/.config/hammerspoon/init.lua`, and a [macOS default](#macos-defaults) points Hammerspoon there instead of `~/.hammerspoon`. It starts Hammerspoon at login and makes F18 switch between U.S. and the last other input source, like macOS's own Caps Lock switch.
 
-Homebrew installs Hammerspoon without opening it, so `install`, `update` and `bundle` start it when it isn't running. The first time, allow it in System Settings → Privacy & Security → Accessibility, then quit and reopen Hammerspoon: until then it can't see key presses. To check which events it sees, set `DEBUG = true` in the script, reload the config, and watch the Hammerspoon console.
+That's for using Caps Lock as the language key across Macs. Universal Control doesn't send Caps Lock to the Mac you're controlling as a key press: it copies the Caps Lock on/off state, so that Mac only sees caps toggle. Run `dotfiles capslock` on the Mac whose keyboard you type on. It remaps Caps Lock to F18 on that Mac's keyboards with `hidutil`, now and at every login (a LaunchAgent, `~/Library/LaunchAgents/dotfiles.capslock-f18.plist`). Universal Control sends F18 as an ordinary key, so Caps Lock switches the input source on whichever Mac you're typing into, as long as Hammerspoon runs on both. Caps Lock no longer turns caps on there, and the remap replaces any other `hidutil` key mapping and the Caps Lock entry in System Settings → Keyboard → Modifier Keys. `dotfiles capslock off` undoes it.
+
+Homebrew installs Hammerspoon without opening it, so `install`, `update` and `bundle` start it when it isn't running.
 
 ### Homebrew
 

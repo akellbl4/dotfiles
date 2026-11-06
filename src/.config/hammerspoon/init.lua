@@ -4,17 +4,15 @@
 
 hs.autoLaunch(true)
 
--- Caps Lock input switching over Universal Control
+-- Input source switching with Caps Lock, also over Universal Control
 --
--- macOS only switches the input source on Caps Lock ("Use Caps Lock to switch to and
--- from U.S.") for keyboards attached to this Mac. Through Universal Control, Caps Lock
--- on the other Mac's keyboard doesn't arrive as the Caps Lock key (key code 57): it
--- arrives as a modifier change with key code 255 that turns caps on (and turns it off
--- again shortly after). This switches the input source whenever caps turns on without
--- the Caps Lock key, and turns caps back off. A real Caps Lock key is left to macOS.
+-- Universal Control doesn't send Caps Lock to the other Mac as a key: it copies the
+-- Caps Lock on/off state, so the other Mac only sees caps toggle. `dotfiles capslock`
+-- remaps Caps Lock to F18 on the Mac whose keyboard you type on; Universal Control sends
+-- F18 as an ordinary key, and F18 here switches between U.S. and the last other input
+-- source, like macOS's own Caps Lock switch, on whichever Mac you're typing into.
 
-local LATIN = "com.apple.keylayout.US" -- the source Caps Lock switches to and from
-local DEBUG = false -- print each modifier change to the Hammerspoon console
+local LATIN = "com.apple.keylayout.US" -- the source F18 switches to and from
 
 local lastOther = nil -- the non-Latin source to switch back to
 
@@ -34,31 +32,18 @@ hs.keycodes.inputSourceChanged(function()
   if current ~= LATIN then lastOther = current end
 end)
 
-local capsWasOn = false
+-- Right after a switch, macOS can still report the previous source for a moment, so
+-- quick presses would "switch" to the source that's already on. Trust the source we
+-- just switched to for a second instead.
+local lastTarget, lastSwitchAt = nil, 0
 
-capsLockTap = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, function(event)
-  local keyCode = event:getKeyCode()
-  local capsOn = (event:rawFlags() & hs.eventtap.event.rawFlagMasks.alphaShift) ~= 0
-  if DEBUG then
-    print(string.format("modifier change: key %d, keyboard type %d, caps %s", keyCode,
-      event:getProperty(hs.eventtap.event.properties.keyboardEventKeyboardType), capsOn and "on" or "off"))
-  end
+local function switchInputSource()
+  local now = hs.timer.secondsSinceEpoch()
+  local current = (lastTarget and now - lastSwitchAt < 1) and lastTarget or hs.keycodes.currentSourceID()
+  local target = current == LATIN and otherSource() or LATIN
+  if not target then return end
+  hs.keycodes.currentSourceID(target)
+  lastTarget, lastSwitchAt = target, now
+end
 
-  -- Act only when caps turns on: other modifiers pressed while caps is on also
-  -- carry the caps flag, and turning it off (by Universal Control or below) doesn't
-  -- count as a press
-  local turnedOn = capsOn and not capsWasOn
-  capsWasOn = capsOn
-  if not turnedOn then return false end
-  if keyCode == hs.keycodes.map.capslock then return false end -- a real Caps Lock key: macOS handles it
-
-  local target = hs.keycodes.currentSourceID() == LATIN and otherSource() or LATIN
-  if target then hs.keycodes.currentSourceID(target) end
-  hs.timer.doAfter(0.05, function() hs.hid.capslock.set(false) end)
-  return false
-end):start()
-
--- macOS disables an event tap that's slow to respond; turn it back on
-capsLockWatchdog = hs.timer.doEvery(30, function()
-  if not capsLockTap:isEnabled() then capsLockTap:start() end
-end)
+inputSourceHotkey = hs.hotkey.bind({}, "f18", switchInputSource)
