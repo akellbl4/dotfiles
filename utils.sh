@@ -983,6 +983,7 @@ n|com.apple.finder|_FXSortFoldersFirstOnDesktop|bool|true|Folders first on the d
 n|com.apple.controlcenter|NSStatusItem VisibleCC WiFi|bool|false|Wi-Fi hidden from the menu bar
 n|com.apple.Spotlight|NSStatusItem VisibleCC Item-0|bool|false|Spotlight hidden from the menu bar
 n|com.apple.symbolichotkeys|64|hotkey-off||Spotlight's ⌘Space shortcut off (free for Raycast)
+n|org.hammerspoon.Hammerspoon|MJConfigFile|string|$HOME/.config/hammerspoon/init.lua|Hammerspoon config read from ~/.config/hammerspoon
 DEFAULTS
 }
 
