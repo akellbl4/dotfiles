@@ -1062,6 +1062,16 @@ macos_defaults() {
 	log "success" "macOS defaults updated"
 }
 
+# Homebrew installs Hammerspoon without opening it, and its config only runs (and adds
+# it to login items) while it's open. Its key handling also needs Accessibility access,
+# which only you can grant.
+start_hammerspoon() {
+	[ -d /Applications/Hammerspoon.app ] || return 0
+	pgrep -xq Hammerspoon && return 0
+	open -a Hammerspoon || return 0
+	log "success" "Hammerspoon started. If it asks, allow it in System Settings → Privacy & Security → Accessibility."
+}
+
 TART_REPO="openai/tart"
 TART_HOME="$HOME/.local/share/tart"
 
