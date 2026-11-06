@@ -34,20 +34,18 @@ hs.keycodes.inputSourceChanged(function()
   if current ~= LATIN then lastOther = current end
 end)
 
-local lastSwitch = 0
-
 capsLockTap = hs.eventtap.new({ hs.eventtap.event.types.flagsChanged }, function(event)
   if event:getKeyCode() ~= hs.keycodes.map.capslock then return false end
 
   local pid = event:getProperty(hs.eventtap.event.properties.eventSourceUnixProcessID)
-  if DEBUG then print(string.format("caps lock event from pid %d", pid)) end
+  local capsOn = (event:rawFlags() & hs.eventtap.event.rawFlagMasks.alphaShift) ~= 0
+  if DEBUG then print(string.format("caps lock event from pid %d, caps %s", pid, capsOn and "on" or "off")) end
   if pid == 0 then return false end -- a real keyboard: macOS handles it
 
-  -- One press can arrive as more than one event, and turning caps off below
-  -- sends another; switch once per press
-  local now = hs.timer.secondsSinceEpoch()
-  if now - lastSwitch < 0.3 then return false end
-  lastSwitch = now
+  -- Caps is turned back off after every switch, so each press turns it on.
+  -- A key release or that reset arrives with caps off: skip it, so every
+  -- press switches once however fast they come
+  if not capsOn then return false end
 
   local target = hs.keycodes.currentSourceID() == LATIN and otherSource() or LATIN
   if target then hs.keycodes.currentSourceID(target) end
