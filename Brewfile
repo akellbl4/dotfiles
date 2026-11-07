@@ -12,6 +12,7 @@ brew "mkcert"
 brew "fzf"
 brew "gnupg"
 brew "podman"
+brew "htop"
 
 # Quicklook plugins
 cask "qlmarkdown"                                       # Markdown https://github.com/sbarex/QLMarkdown
