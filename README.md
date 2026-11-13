@@ -126,7 +126,7 @@ Some of the aliases:
 
 `dotfiles node` (also run by every `install` and `update`) sets up:
 
-- **Node** with [fnm](https://github.com/Schniz/fnm): the latest LTS is installed and set as the default. When a newer LTS comes out, the next `dotfiles update` installs it and makes it the default. In a project with a `.nvmrc` or `.node-version` file, `cd` switches to that version.
+- **Node** with [fnm](https://github.com/Schniz/fnm): the latest LTS is installed and set as the default. When a newer LTS comes out, the next `dotfiles update` installs it and makes it the default. Opening a shell or `cd` anywhere inside a project with a `.nvmrc`, `.node-version` or `engines.node` in `package.json` switches to that version, installing it first if needed. Leaving the project switches back to the default.
 - **pnpm** through Corepack. Node 25 and later no longer include Corepack, so it's installed from npm when missing, then enabled, and the latest pnpm is installed with it.
 - **Bun**
 
