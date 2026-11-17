@@ -262,6 +262,17 @@ if [ "$COMMAND" = "ai-tools" ]; then
 	setup_ai_tools
 fi
 
+if [ "$COMMAND" = "capslock" ]; then
+	if [ "$(uname)" != "Darwin" ]; then
+		log "error" "capslock is for macOS"
+		exit 1
+	fi
+	case "$2" in
+		off) capslock_off ;;
+		*) capslock_on ;;
+	esac
+fi
+
 if [ "$COMMAND" = "t3-autostart" ]; then
 	setup_t3_service
 fi
@@ -314,6 +325,7 @@ if [ "$COMMAND" = "help" ] || [ "$COMMAND" = "" ]; then
 	log "" "${BOLD}podman${RESET}       🐳 Installs Podman and makes the docker command use it (macOS, Debian, Fedora)." 2
 	log "" "${BOLD}node${RESET}         🟢 Installs the latest Node LTS (via fnm), pnpm (via Corepack) and Bun." 2
 	log "" "${BOLD}ai-tools${RESET}     🤖 Installs Claude Code and Codex, plus Cursor and T3 Code on machines with a desktop." 2
+	log "" "${BOLD}capslock${RESET}     ⇪ Makes Caps Lock switch the input source, also over Universal Control (macOS). 'capslock off' undoes it." 2
 	log "" "${BOLD}t3-autostart${RESET} 🚀 Runs the T3 Code server as a background service that starts at login." 2
 	log "" "${BOLD}agent-user${RESET}   🔒 Creates a separate macOS user that runs the T3 Code server and its agents (macOS)." 2
 	log "" "${BOLD}agent-token${RESET}  🎟️ Saves a GitHub token for the agent user: dotfiles agent-token <owner|default>." 2

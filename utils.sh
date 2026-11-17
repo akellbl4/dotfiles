@@ -1062,6 +1062,48 @@ macos_defaults() {
 	log "success" "macOS defaults updated"
 }
 
+CAPSLOCK_LABEL="dotfiles.capslock-f18"
+CAPSLOCK_PLIST="$HOME/Library/LaunchAgents/$CAPSLOCK_LABEL.plist"
+# Caps Lock (HID usage 0x39) to F18 (0x6D); an empty list removes it
+CAPSLOCK_MAPPING='{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x70000006D}]}'
+
+# Remap Caps Lock to F18 on this Mac's keyboards, now and at every login, so Hammerspoon
+# switches the input source with it, also when typing into another Mac over Universal
+# Control (which forwards F18 as a key but only mirrors Caps Lock's on/off state)
+capslock_on() {
+	mkdir -p "$HOME/Library/LaunchAgents"
+	cat >"$CAPSLOCK_PLIST" <<PLIST
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>$CAPSLOCK_LABEL</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/usr/bin/hidutil</string>
+		<string>property</string>
+		<string>--set</string>
+		<string>$CAPSLOCK_MAPPING</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+</dict>
+</plist>
+PLIST
+	launchctl bootout "gui/$(id -u)/$CAPSLOCK_LABEL" 2>/dev/null || true
+	launchctl bootstrap "gui/$(id -u)" "$CAPSLOCK_PLIST"
+	hidutil property --set "$CAPSLOCK_MAPPING" >/dev/null
+	log "success" "Caps Lock is F18 on this Mac, now and at login. Hammerspoon switches the input source with it."
+}
+
+capslock_off() {
+	launchctl bootout "gui/$(id -u)/$CAPSLOCK_LABEL" 2>/dev/null || true
+	rm -f "$CAPSLOCK_PLIST"
+	hidutil property --set '{"UserKeyMapping":[]}' >/dev/null
+	log "success" "Caps Lock is back to normal on this Mac"
+}
+
 # Homebrew installs Hammerspoon without opening it, and its config only runs (and adds
 # it to login items) while it's open. Its key handling also needs Accessibility access,
 # which only you can grant.
